@@ -114,6 +114,18 @@ export default function App() {
     setIsTxModalOpen(true);
   };
 
+  const handleDuplicateTransaction = (tx: Transaction) => {
+    // Open modal as new transaction with copied values
+    setEditingTransaction({
+      ...tx,
+      id: '', // Empty id means new
+      date: new Date().toISOString().split('T')[0],
+      note: tx.note ? `${tx.note} (Sao chép)` : '',
+    });
+    setTxModalDefaultType(tx.type);
+    setIsTxModalOpen(true);
+  };
+
   // Category handlers
   const handleAddCategory = (newCat: Omit<Category, 'id'>) => {
     const id = `cat-${Date.now()}`;
@@ -211,6 +223,7 @@ export default function App() {
             onOpenAddModal={handleOpenAddModal}
             onEditTransaction={handleEditTransaction}
             onDeleteTransaction={handleDeleteTransaction}
+            onDuplicateTransaction={handleDuplicateTransaction}
             currentMonth={currentMonth}
           />
         )}
@@ -257,6 +270,7 @@ export default function App() {
         isOpen={isTxModalOpen}
         onClose={() => setIsTxModalOpen(false)}
         onSave={handleSaveTransaction}
+        onDelete={handleDeleteTransaction}
         categories={categories}
         members={members}
         editingTransaction={editingTransaction}
