@@ -1,0 +1,6 @@
+{
+  "name": "Quản Lý Thu Chi Gia Đình",
+  "description": "Ứng dụng quản lý thu chi, ngân sách và tài chính gia đình thông minh, trực quan, hỗ trợ tiếng Việt.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
