@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search,
-  Filter,
   Trash2,
   Edit2,
   Download,
@@ -17,9 +16,10 @@ import {
   CheckSquare,
   Square,
   ArrowUpDown,
+  Filter,
 } from 'lucide-react';
 import { Transaction, Category, FamilyMember, TransactionType } from '../types';
-import { formatVND, formatDateVN } from '../utils/formatters';
+import { formatVND, formatDateVN, formatRelativeDateVN } from '../utils/formatters';
 import { CategoryIcon } from './CategoryIcon';
 import { exportTransactionsToCSV } from '../utils/storage';
 
@@ -55,6 +55,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [sortBy, setSortBy] = useState<SortField>('date-desc');
+  const [showFiltersMobile, setShowFiltersMobile] = useState<boolean>(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -70,7 +71,6 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
   const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
 
-  // Previous month string helper
   const prevMonthStr = useMemo(() => {
     const [y, m] = currentMonth.split('-').map(Number);
     const d = new Date(y, m - 2, 1);
@@ -240,366 +240,414 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
     sortBy !== 'date-desc';
 
   return (
-    <div className="space-y-5">
-      {/* 1. Header Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900">Quản Lý Lịch Sử Giao Dịch</h2>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
-              {filteredList.length} bản ghi
-            </span>
+    <div className="space-y-3 sm:space-y-4">
+      {/* 1. Mobile & Desktop Header with Quick Action Bar */}
+      <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900">
+                Sổ Giao Dịch
+              </h2>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                {filteredList.length} giao dịch
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              Lịch sử thu chi, tìm kiếm và phân loại chi tiết
+            </p>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Thêm mới, sửa, xóa, nhân bản và lọc chi tiết các khoản thu chi gia đình
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          {selectedIds.size > 0 && (
+          {/* Quick Buttons */}
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xóa {selectedIds.size}</span>
+              </button>
+            )}
+
             <button
-              onClick={() => setIsBulkDeleteModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 transition-colors"
+              onClick={handleExportCSV}
+              className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold"
+              title="Xuất file Excel CSV UTF-8"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Xóa {selectedIds.size} đã chọn</span>
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Xuất Excel</span>
             </button>
-          )}
 
-          <button
-            onClick={handleExportCSV}
-            title="Xuất file Excel CSV tương thích UTF-8"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
-          >
-            <Download className="w-4 h-4 text-slate-500" />
-            <span className="hidden sm:inline">Xuất Excel / CSV</span>
-            <span className="sm:hidden">Xuất</span>
-          </button>
+            <button
+              onClick={() => onOpenAddModal('expense')}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black shadow-xs shadow-rose-200 active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Chi</span>
+            </button>
 
-          <button
-            onClick={() => onOpenAddModal('expense')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold shadow-xs shadow-rose-200 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Ghi Khoản Chi</span>
-          </button>
-
-          <button
-            onClick={() => onOpenAddModal('income')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-xs shadow-emerald-200 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Ghi Khoản Thu</span>
-          </button>
+            <button
+              onClick={() => onOpenAddModal('income')}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-xs shadow-emerald-200 active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Thu</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. Filter & Search Control Panel */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-xs space-y-4">
-        {/* Search input and Time Preset Tabs */}
-        <div className="flex flex-col lg:flex-row gap-3">
+      {/* 2. Compact Search & Filter Toolbar */}
+      <div className="bg-white p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xs space-y-2.5">
+        {/* Search input + Filter toggle button */}
+        <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Tìm theo ghi chú, danh mục, số tiền, thành viên..."
-              className="w-full pl-10 pr-9 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-hidden"
+              placeholder="Tìm theo ghi chú, số tiền, danh mục..."
+              className="w-full pl-9 pr-8 py-2 text-xs rounded-xl border border-slate-200 focus:border-indigo-500 outline-hidden font-medium"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Time Preset Buttons */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => setTimeFilter('current_month')}
-              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
-                timeFilter === 'current_month'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Tháng này
-            </button>
-            <button
-              onClick={() => setTimeFilter('prev_month')}
-              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
-                timeFilter === 'prev_month'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Tháng trước
-            </button>
-            <button
-              onClick={() => setTimeFilter('this_year')}
-              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
-                timeFilter === 'this_year'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Năm {currentYearStr}
-            </button>
-            <button
-              onClick={() => setTimeFilter('all')}
-              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
-                timeFilter === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Tất cả
-            </button>
-            <button
-              onClick={() => setTimeFilter('custom')}
-              className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all ${
-                timeFilter === 'custom'
-                  ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Tùy chọn ngày
-            </button>
-          </div>
-        </div>
-
-        {/* Custom date range picker */}
-        {timeFilter === 'custom' && (
-          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl text-xs flex-wrap border border-slate-100 animate-fade-in">
-            <Calendar className="w-4 h-4 text-indigo-600" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-600 font-medium">Từ ngày:</span>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-hidden focus:border-indigo-500"
-              />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-600 font-medium">Đến ngày:</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-hidden focus:border-indigo-500"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Secondary Filters Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Lọc:</span>
-            </div>
-
-            {/* Type selector */}
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value as any)}
-              className="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-hidden focus:border-indigo-400 font-medium"
-            >
-              <option value="all">Loại: Tất cả</option>
-              <option value="expense">Chi tiêu (Khoản Chi)</option>
-              <option value="income">Thu nhập (Khoản Thu)</option>
-            </select>
-
-            {/* Category selector */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-hidden focus:border-indigo-400 font-medium max-w-[180px]"
-            >
-              <option value="all">Danh mục: Tất cả ({categories.length})</option>
-              <optgroup label="Danh mục Chi tiêu">
-                {categories
-                  .filter((c) => c.type === 'expense')
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-              </optgroup>
-              <optgroup label="Danh mục Thu nhập">
-                {categories
-                  .filter((c) => c.type === 'income')
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-              </optgroup>
-            </select>
-
-            {/* Member selector */}
-            <select
-              value={selectedMember}
-              onChange={(e) => setSelectedMember(e.target.value)}
-              className="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-hidden focus:border-indigo-400 font-medium"
-            >
-              <option value="all">Thành viên: Cả nhà</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.role})
-                </option>
-              ))}
-            </select>
-
-            {/* Sort selector */}
-            <div className="flex items-center gap-1.5">
-              <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortField)}
-                className="text-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-hidden focus:border-indigo-400 font-medium"
-              >
-                <option value="date-desc">Ngày: Mới nhất trước</option>
-                <option value="date-asc">Ngày: Cũ nhất trước</option>
-                <option value="amount-desc">Số tiền: Lớn nhất trước</option>
-                <option value="amount-asc">Số tiền: Nhỏ nhất trước</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Reset Filters button */}
-          {hasActiveFilters && (
-            <button
-              onClick={resetAllFilters}
-              className="text-xs text-rose-500 hover:text-rose-700 font-medium underline underline-offset-2 flex items-center gap-1"
-            >
-              <X className="w-3.5 h-3.5" />
-              <span>Đặt lại bộ lọc</span>
-            </button>
-          )}
-        </div>
-
-        {/* Quick Member avatar filter pills */}
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-50 overflow-x-auto scrollbar-none">
-          <span className="text-[11px] text-slate-400 font-medium">Lọc nhanh thành viên:</span>
+          {/* Mobile Filter Toggle */}
           <button
-            onClick={() => setSelectedMember('all')}
-            className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
-              selectedMember === 'all'
-                ? 'bg-slate-900 text-white border-slate-900 font-semibold'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+            className={`sm:hidden p-2 rounded-xl border flex items-center gap-1 text-xs font-bold transition-colors ${
+              showFiltersMobile || hasActiveFilters
+                ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
+                : 'border-slate-200 text-slate-600'
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Quick Time Pills (Horizontal scroll on mobile) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+          <button
+            onClick={() => setTimeFilter('current_month')}
+            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap font-bold transition-all ${
+              timeFilter === 'current_month'
+                ? 'bg-slate-900 text-white shadow-2xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Tháng này
+          </button>
+          <button
+            onClick={() => setTimeFilter('prev_month')}
+            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap font-bold transition-all ${
+              timeFilter === 'prev_month'
+                ? 'bg-slate-900 text-white shadow-2xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Tháng trước
+          </button>
+          <button
+            onClick={() => setTimeFilter('this_year')}
+            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap font-bold transition-all ${
+              timeFilter === 'this_year'
+                ? 'bg-slate-900 text-white shadow-2xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Năm {currentYearStr}
+          </button>
+          <button
+            onClick={() => setTimeFilter('all')}
+            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap font-bold transition-all ${
+              timeFilter === 'all'
+                ? 'bg-slate-900 text-white shadow-2xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             Tất cả
           </button>
-          {members.map((m) => {
-            const isSelected = selectedMember === m.id;
-            return (
-              <button
-                key={m.id}
-                onClick={() => setSelectedMember(m.id)}
-                className={`text-xs px-2.5 py-1 rounded-full border flex items-center gap-1.5 transition-all ${
-                  isSelected
-                    ? 'border-slate-800 bg-slate-800 text-white font-semibold shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                }`}
+          <button
+            onClick={() => setTimeFilter('custom')}
+            className={`px-3 py-1 text-xs rounded-full whitespace-nowrap font-bold transition-all ${
+              timeFilter === 'custom'
+                ? 'bg-slate-900 text-white shadow-2xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Tùy chọn
+          </button>
+        </div>
+
+        {/* Custom date range if active */}
+        {timeFilter === 'custom' && (
+          <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl text-xs flex-wrap border border-slate-100">
+            <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+            <input
+              type="date"
+              value={customStartDate}
+              onChange={(e) => setCustomStartDate(e.target.value)}
+              className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+            />
+            <span className="text-slate-400">→</span>
+            <input
+              type="date"
+              value={customEndDate}
+              onChange={(e) => setCustomEndDate(e.target.value)}
+              className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs outline-hidden"
+            />
+          </div>
+        )}
+
+        {/* Secondary Filters (Always visible on desktop, toggleable on mobile) */}
+        <div className={`space-y-2 pt-1 border-t border-slate-100 ${showFiltersMobile ? 'block' : 'hidden sm:block'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Type selector */}
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value as any)}
+                className="text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-semibold outline-hidden"
               >
-                <span
-                  className="w-2 h-2 rounded-full inline-block"
-                  style={{ backgroundColor: m.avatarColor }}
-                />
-                <span>{m.name}</span>
+                <option value="all">Loại: Tất cả</option>
+                <option value="expense">Khoản Chi (-)</option>
+                <option value="income">Khoản Thu (+)</option>
+              </select>
+
+              {/* Category selector */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-semibold outline-hidden max-w-[150px]"
+              >
+                <option value="all">Danh mục: Tất cả</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Sort selector */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortField)}
+                className="text-xs px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-semibold outline-hidden"
+              >
+                <option value="date-desc">Mới nhất</option>
+                <option value="date-asc">Cũ nhất</option>
+                <option value="amount-desc">Số tiền lớn nhất</option>
+                <option value="amount-asc">Số tiền nhỏ nhất</option>
+              </select>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                onClick={resetAllFilters}
+                className="text-xs text-rose-500 font-bold hover:underline flex items-center gap-0.5 ml-auto"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Đặt lại</span>
               </button>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Quick Member avatar filter pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-1">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Thành viên:</span>
+            <button
+              onClick={() => setSelectedMember('all')}
+              className={`text-xs px-2.5 py-0.5 rounded-full border transition-all ${
+                selectedMember === 'all'
+                  ? 'bg-slate-900 text-white border-slate-900 font-bold'
+                  : 'bg-white text-slate-600 border-slate-200'
+              }`}
+            >
+              Cả nhà
+            </button>
+            {members.map((m) => {
+              const isSelected = selectedMember === m.id;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedMember(m.id)}
+                  className={`text-xs px-2 py-0.5 rounded-full border flex items-center gap-1.5 transition-all ${
+                    isSelected
+                      ? 'border-slate-800 bg-slate-800 text-white font-bold shadow-2xs'
+                      : 'bg-white text-slate-700 border-slate-200'
+                  }`}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full inline-block"
+                    style={{ backgroundColor: m.avatarColor }}
+                  />
+                  <span>{m.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 3. Summary Metric Cards for current filter result */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Tổng số giao dịch
-          </p>
-          <p className="text-xl font-bold text-slate-800 mt-0.5">
-            {filteredList.length}{' '}
-            <span className="text-xs font-normal text-slate-400">khoản</span>
-          </p>
+      {/* 3. Summary Metric Chips */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs text-center">
+          <p className="text-[10px] font-bold text-slate-400 uppercase">Giao dịch</p>
+          <p className="text-base font-black text-slate-800 mt-0.5">{filteredList.length}</p>
         </div>
-
-        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
-          <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">
-            Tổng Tiền Thu
-          </p>
-          <p className="text-xl font-bold text-emerald-600 mt-0.5">
+        <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs text-center">
+          <p className="text-[10px] font-bold text-emerald-600 uppercase">Thu vào</p>
+          <p className="text-sm sm:text-base font-black text-emerald-600 mt-0.5 truncate">
             +{formatVND(summaryIncome)}
           </p>
         </div>
-
-        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
-          <p className="text-[11px] font-semibold text-rose-600 uppercase tracking-wider">
-            Tổng Tiền Chi
-          </p>
-          <p className="text-xl font-bold text-rose-600 mt-0.5">
+        <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs text-center">
+          <p className="text-[10px] font-bold text-rose-600 uppercase">Chi ra</p>
+          <p className="text-sm sm:text-base font-black text-rose-600 mt-0.5 truncate">
             -{formatVND(summaryExpense)}
-          </p>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-            Chênh lệch Thu - Chi
-          </p>
-          <p
-            className={`text-xl font-bold mt-0.5 ${
-              summaryNet >= 0 ? 'text-indigo-600' : 'text-rose-600'
-            }`}
-          >
-            {formatVND(summaryNet)}
           </p>
         </div>
       </div>
 
-      {/* 4. Transactions List (Table for Desktop, Cards for Mobile) */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-xs overflow-hidden">
+      {/* 4. Transactions List (Cards on Mobile, Clean Table on Desktop) */}
+      <div className="space-y-2">
         {filteredList.length === 0 ? (
-          <div className="text-center py-16 px-4">
-            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-3">
-              <Search className="w-8 h-8" />
+          <div className="bg-white rounded-2xl sm:rounded-3xl p-8 text-center border border-slate-100 shadow-2xs">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-2">
+              <Search className="w-6 h-6" />
             </div>
-            <h4 className="text-base font-bold text-slate-700">
-              Không tìm thấy giao dịch nào
-            </h4>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
-              Thử tìm kiếm với từ khóa khác hoặc bấm đặt lại bộ lọc thời gian và danh mục.
+            <h4 className="text-sm font-bold text-slate-700">Không tìm thấy giao dịch nào</h4>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Hãy thử tìm kiếm từ khóa khác hoặc đặt lại bộ lọc.
             </p>
-            <div className="flex items-center justify-center gap-3 mt-4">
-              <button
-                onClick={resetAllFilters}
-                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200 transition-colors"
-              >
-                Đặt lại bộ lọc
-              </button>
-              <button
-                onClick={() => onOpenAddModal('expense')}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold hover:bg-indigo-700 transition-colors"
-              >
-                + Thêm giao dịch mới
-              </button>
-            </div>
+            <button
+              onClick={resetAllFilters}
+              className="mt-3 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200"
+            >
+              Đặt lại bộ lọc
+            </button>
           </div>
         ) : (
           <>
+            {/* Mobile Vertical Cards View (Criteria 4) */}
+            <div className="sm:hidden space-y-2">
+              {paginatedList.map((tx) => {
+                const cat = categoryMap.get(tx.categoryId);
+                const mem = memberMap.get(tx.memberId);
+                const isExpense = tx.type === 'expense';
+                const isSelected = selectedIds.has(tx.id);
+
+                return (
+                  <div
+                    key={tx.id}
+                    onClick={() => onEditTransaction(tx)}
+                    className={`bg-white p-3 rounded-2xl border transition-all active:scale-[0.99] cursor-pointer shadow-2xs ${
+                      isSelected
+                        ? 'border-indigo-400 bg-indigo-50/20'
+                        : 'border-slate-100 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Left: Category Icon */}
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-2xs"
+                          style={{ backgroundColor: cat ? cat.color : '#94a3b8' }}
+                        >
+                          <CategoryIcon name={cat ? cat.icon : 'Tag'} className="w-5 h-5" />
+                        </div>
+
+                        {/* Middle: Title & Subtitle */}
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-slate-900 truncate">
+                            {tx.note || (cat ? cat.name : 'Giao dịch')}
+                          </p>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                            <span className="font-semibold text-slate-500">
+                              {formatRelativeDateVN(tx.date)}
+                            </span>
+                            <span>•</span>
+                            <span
+                              className="font-bold inline-flex items-center gap-1"
+                              style={{ color: mem ? mem.avatarColor : '#64748b' }}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full inline-block"
+                                style={{ backgroundColor: mem ? mem.avatarColor : '#64748b' }}
+                              />
+                              {mem ? mem.name : ''}
+                            </span>
+                            <span>•</span>
+                            <span className="truncate">{cat ? cat.name : ''}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Amount & Payment */}
+                      <div className="text-right flex-shrink-0">
+                        <p
+                          className={`text-sm font-black tracking-tight ${
+                            isExpense ? 'text-rose-600' : 'text-emerald-600'
+                          }`}
+                        >
+                          {isExpense ? '-' : '+'}
+                          {formatVND(tx.amount)}
+                        </p>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                          {tx.paymentMethod ? paymentLabels[tx.paymentMethod] : 'Tiền mặt'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick Action row */}
+                    <div className="flex items-center justify-between pt-2 mt-2 border-t border-slate-50 text-[11px] text-slate-400">
+                      <span className="text-[10px]">Chạm để sửa chi tiết</span>
+                      <div className="flex items-center gap-3">
+                        {onDuplicateTransaction && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDuplicateTransaction(tx);
+                            }}
+                            className="font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>Sao chép</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTargetId(tx.id);
+                          }}
+                          className="font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Xóa</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden sm:block bg-white rounded-3xl border border-slate-100 shadow-2xs overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                  <tr className="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="py-3 px-4 w-10 text-center">
                       <button
                         onClick={toggleSelectAllPage}
@@ -654,7 +702,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <div
-                              className="w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 shadow-xs"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-white flex-shrink-0 shadow-2xs"
                               style={{ backgroundColor: cat ? cat.color : '#94a3b8' }}
                             >
                               <CategoryIcon name={cat ? cat.icon : 'Tag'} className="w-3.5 h-3.5" />
@@ -689,7 +737,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         </td>
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
                           <span
-                            className={`font-bold text-sm ${
+                            className={`font-black text-sm ${
                               isExpense ? 'text-rose-600' : 'text-emerald-600'
                             }`}
                           >
@@ -731,123 +779,21 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               </table>
             </div>
 
-            {/* Mobile Card List View */}
-            <div className="md:hidden divide-y divide-slate-100">
-              {paginatedList.map((tx) => {
-                const cat = categoryMap.get(tx.categoryId);
-                const mem = memberMap.get(tx.memberId);
-                const isExpense = tx.type === 'expense';
-                const isSelected = selectedIds.has(tx.id);
-
-                return (
-                  <div
-                    key={tx.id}
-                    className={`p-4 space-y-2 transition-colors ${
-                      isSelected ? 'bg-indigo-50/30' : ''
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <button
-                          onClick={() => toggleSelectId(tx.id)}
-                          className="text-slate-400 hover:text-indigo-600 flex-shrink-0"
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-indigo-600" />
-                          ) : (
-                            <Square className="w-4 h-4" />
-                          )}
-                        </button>
-                        <div
-                          className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-xs"
-                          style={{ backgroundColor: cat ? cat.color : '#94a3b8' }}
-                        >
-                          <CategoryIcon name={cat ? cat.icon : 'Tag'} className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">
-                            {tx.note || (cat ? cat.name : 'Giao dịch')}
-                          </p>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
-                            {formatDateVN(tx.date)} • {cat ? cat.name : ''}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <p
-                          className={`text-sm font-bold ${
-                            isExpense ? 'text-rose-600' : 'text-emerald-600'
-                          }`}
-                        >
-                          {isExpense ? '-' : '+'}
-                          {formatVND(tx.amount)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="px-2 py-0.5 rounded-md font-semibold text-[11px]"
-                          style={{
-                            backgroundColor: `${mem ? mem.avatarColor : '#64748b'}15`,
-                            color: mem ? mem.avatarColor : '#64748b',
-                          }}
-                        >
-                          {mem ? mem.name : 'Gia đình'}
-                        </span>
-                        <span className="text-slate-400 text-[11px]">
-                          {tx.paymentMethod ? paymentLabels[tx.paymentMethod] : 'Tiền mặt'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {onDuplicateTransaction && (
-                          <button
-                            onClick={() => onDuplicateTransaction(tx)}
-                            title="Nhân bản"
-                            className="p-1 text-slate-400 hover:text-emerald-600"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => onEditTransaction(tx)}
-                          title="Sửa"
-                          className="p-1 text-slate-500 hover:text-indigo-600"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTargetId(tx.id)}
-                          title="Xóa"
-                          className="p-1 text-slate-400 hover:text-rose-600"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
             {/* Pagination Controls */}
-            <div className="px-5 py-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 bg-slate-50/50">
+            <div className="bg-white p-3 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
               <div className="flex items-center gap-2">
-                <span>Hiển thị</span>
+                <span>Xem</span>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                  className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 outline-hidden font-semibold"
+                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-slate-700 font-bold outline-hidden"
                 >
                   <option value={10}>10</option>
                   <option value={15}>15</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
                 </select>
-                <span>mục trên trang • Tổng {filteredList.length} giao dịch</span>
+                <span>dòng • Tổng {filteredList.length} giao dịch</span>
               </div>
 
               {totalPages > 1 && (
@@ -855,17 +801,17 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="px-3 font-semibold text-slate-700">
+                  <span className="px-2 font-bold text-slate-700">
                     Trang {currentPage} / {totalPages}
                   </span>
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                    className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -876,62 +822,62 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
         )}
       </div>
 
-      {/* Single Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       {deleteTargetId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-6 text-center space-y-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-5 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-base font-bold text-slate-900">Xác nhận xóa giao dịch?</h4>
+              <h4 className="text-base font-extrabold text-slate-900">Xác nhận xóa giao dịch?</h4>
               <p className="text-xs text-slate-500 mt-1">
-                Khoản thu chi này sẽ bị xóa khỏi sổ quản lý gia đình. Thao tác không thể hoàn tác.
+                Khoản thu chi này sẽ bị xóa khỏi sổ chi tiêu.
               </p>
             </div>
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-2 pt-1">
               <button
                 onClick={() => setDeleteTargetId(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50"
               >
-                Hủy bỏ
+                Hủy
               </button>
               <button
                 onClick={handleConfirmSingleDelete}
-                className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 shadow-sm shadow-rose-200"
+                className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-sm"
               >
-                Đồng ý xóa
+                Xóa ngay
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bulk Delete Confirmation Modal */}
+      {/* Bulk Delete Modal */}
       {isBulkDeleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-6 text-center space-y-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-sm p-5 text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-base font-bold text-slate-900">
+              <h4 className="text-base font-extrabold text-slate-900">
                 Xóa {selectedIds.size} giao dịch đã chọn?
               </h4>
               <p className="text-xs text-slate-500 mt-1">
-                Tất cả các khoản thu chi đã chọn sẽ bị xóa vĩnh viễn khỏi hệ thống.
+                Tất cả các khoản đã chọn sẽ bị xóa vĩnh viễn khỏi sổ.
               </p>
             </div>
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-2 pt-1">
               <button
                 onClick={() => setIsBulkDeleteModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50"
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50"
               >
-                Hủy bỏ
+                Hủy
               </button>
               <button
                 onClick={handleConfirmBulkDelete}
-                className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 shadow-sm shadow-rose-200"
+                className="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-sm"
               >
                 Xóa tất cả
               </button>

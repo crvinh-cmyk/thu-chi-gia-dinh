@@ -68,13 +68,13 @@ export const MembersView: React.FC<MembersViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Thành Viên Trong Gia Đình</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Theo dõi sự đóng góp thu nhập và thói quen chi tiêu của từng người
+          <h2 className="text-lg sm:text-xl font-black text-slate-900">Thành Viên Gia Đình</h2>
+          <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+            Theo dõi đóng góp thu nhập và thói quen chi tiêu của từng người
           </p>
         </div>
 
@@ -85,10 +85,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
             setError('');
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-xs shadow-indigo-200 transition-colors w-full sm:w-auto justify-center"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold shadow-xs shadow-indigo-200 transition-colors w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" />
-          <span>Thêm thành viên</span>
+          <span>+ Thêm thành viên</span>
         </button>
       </div>
 

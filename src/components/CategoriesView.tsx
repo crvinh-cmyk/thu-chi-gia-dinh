@@ -204,30 +204,30 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-5">
       {/* 1. Header Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Quản Lý Danh Mục Thu & Chi</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Phân loại khoa học các khoản sinh hoạt, học tập, ăn uống, nhà cửa và nguồn thu nhập
+          <h2 className="text-lg sm:text-xl font-black text-slate-900">Quản Lý Danh Mục</h2>
+          <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+            Phân loại khoa học các khoản sinh hoạt, học tập và nguồn thu
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleOpenAddModal('expense')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold shadow-xs shadow-rose-200 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 active:scale-95 text-white text-xs font-black shadow-xs shadow-rose-200 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Danh Mục Chi Tiêu</span>
+            <span>+ Danh Mục Chi</span>
           </button>
           <button
             onClick={() => handleOpenAddModal('income')}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-xs shadow-emerald-200 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-xs font-black shadow-xs shadow-emerald-200 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Danh Mục Thu Nhập</span>
+            <span>+ Danh Mục Thu</span>
           </button>
         </div>
       </div>

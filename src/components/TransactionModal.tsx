@@ -9,7 +9,7 @@ import {
   CreditCard,
   Trash2,
   Sparkles,
-  Copy,
+  Check,
 } from 'lucide-react';
 import { Transaction, TransactionType, Category, FamilyMember, PaymentMethod } from '../types';
 import { CategoryIcon } from './CategoryIcon';
@@ -30,41 +30,38 @@ const PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
   { id: 'transfer', label: 'Chuyển khoản' },
   { id: 'cash', label: 'Tiền mặt' },
   { id: 'credit', label: 'Thẻ tín dụng' },
-  { id: 'ewallet', label: 'Ví Momo/ZaloPay' },
+  { id: 'ewallet', label: 'Ví điện tử' },
 ];
 
 const QUICK_AMOUNTS = [
-  50000,
-  100000,
-  200000,
-  500000,
-  1000000,
-  2000000,
-  5000000,
-  10000000,
+  { label: '+50k', value: 50000 },
+  { label: '+100k', value: 100000 },
+  { label: '+200k', value: 200000 },
+  { label: '+500k', value: 500000 },
+  { label: '+1tr', value: 1000000 },
+  { label: '+2tr', value: 2000000 },
 ];
 
 const QUICK_NOTES_EXPENSE = [
   'Đi chợ / Siêu thị',
-  'Hóa đơn tiền điện EVN',
+  'Tiền điện EVN',
   'Tiền nước sinh hoạt',
-  'Cước Internet & Điện thoại',
-  'Học phí & Tiền bán trú',
-  'Ăn uống cả nhà cuối tuần',
+  'Internet / Điện thoại',
+  'Học phí của con',
+  'Cả nhà ăn ngoài',
   'Đổ xăng xe',
-  'Bảo dưỡng / Thay dầu xe',
-  'Mua đồ dùng gia đình',
-  'Khám bệnh & Mua thuốc',
-  'Tiền mừng cưới / Hiếu hỷ',
+  'Mua sắm đồ dùng',
+  'Thuốc & Khám bệnh',
+  'Tiền mừng / Hiếu hỷ',
 ];
 
 const QUICK_NOTES_INCOME = [
-  'Lương tháng công ty',
-  'Lợi nhuận kinh doanh',
-  'Tiền thưởng KPI / Dự án',
-  'Thu nhập làm thêm (Freelance)',
-  'Lãi tiết kiệm & Đầu tư',
-  'Tiền biếu tặng',
+  'Lương công ty',
+  'Kinh doanh online',
+  'Tiền thưởng',
+  'Làm thêm ngoài giờ',
+  'Lãi đầu tư',
+  'Được biếu tặng',
 ];
 
 export const TransactionModal: React.FC<TransactionModalProps> = ({
@@ -90,7 +87,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   useEffect(() => {
     if (editingTransaction) {
       setType(editingTransaction.type);
-      setAmountStr(editingTransaction.amount.toString());
+      setAmountStr(editingTransaction.amount ? editingTransaction.amount.toString() : '');
       setCategoryId(editingTransaction.categoryId);
       setMemberId(editingTransaction.memberId);
       setDate(editingTransaction.date);
@@ -120,8 +117,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
   };
 
-  const handleQuickAmount = (val: number) => {
-    setAmountStr(val.toString());
+  // Add amount incrementally with pills
+  const handleQuickAddAmount = (val: number) => {
+    const current = parseInt(amountStr, 10) || 0;
+    setAmountStr((current + val).toString());
+    setError('');
   };
 
   const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,17 +146,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     e.preventDefault();
 
     if (!numericAmount || numericAmount <= 0) {
-      setError('Vui lòng nhập số tiền hợp lệ lớn hơn 0');
+      setError('Vui lòng nhập số tiền lớn hơn 0');
       return;
     }
 
     if (!categoryId) {
-      setError('Vui lòng chọn danh mục giao dịch');
+      setError('Vui lòng chọn danh mục');
       return;
     }
 
     if (!memberId) {
-      setError('Vui lòng chọn thành viên thực hiện');
+      setError('Vui lòng chọn thành viên');
       return;
     }
 
@@ -192,10 +192,19 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const quickNotes = type === 'expense' ? QUICK_NOTES_EXPENSE : QUICK_NOTES_INCOME;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 my-auto max-h-[92vh] flex flex-col">
-        {/* Header */}
-        <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 flex-shrink-0">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-hidden">
+      {/* Background click to dismiss on desktop */}
+      <div className="hidden sm:block absolute inset-0 -z-10" onClick={onClose} />
+
+      {/* Drawer / Modal Container */}
+      <div className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-100 max-h-[92vh] flex flex-col animate-slide-up sm:animate-fade-in">
+        {/* Mobile Pull Handle */}
+        <div className="sm:hidden pt-3 pb-1 flex justify-center">
+          <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
+        </div>
+
+        {/* Modal Header */}
+        <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div
               className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold shadow-xs flex-shrink-0 ${
@@ -209,22 +218,22 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               )}
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                {editingTransaction ? 'Chỉnh sửa khoản thu / chi' : 'Thêm giao dịch mới'}
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
+                {editingTransaction ? 'Chỉnh sửa khoản tiền' : 'Ghi chép giao dịch'}
               </h3>
-              <p className="text-xs text-slate-500">
-                Ghi chép thu chi minh bạch cho cả gia đình
+              <p className="text-[11px] text-slate-400">
+                {type === 'expense' ? 'Ghi nhận chi tiêu gia đình' : 'Ghi nhận thu nhập gia đình'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {editingTransaction && onDelete && (
               <button
                 type="button"
                 onClick={() => setShowConfirmDelete(true)}
                 title="Xóa giao dịch này"
-                className="w-9 h-9 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -232,18 +241,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <button
               onClick={onClose}
               type="button"
-              className="w-9 h-9 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Delete confirmation banner if triggered inside modal */}
+        {/* Delete confirmation banner */}
         {showConfirmDelete && (
-          <div className="p-4 bg-rose-50 border-b border-rose-200 flex items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 bg-rose-50 border-b border-rose-200 flex items-center justify-between gap-3 text-xs">
             <span className="font-semibold text-rose-800">
-              Bạn có chắc muốn xóa giao dịch này?
+              Xóa giao dịch này khỏi sổ chi tiêu?
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -251,7 +260,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 onClick={() => setShowConfirmDelete(false)}
                 className="px-2.5 py-1 bg-white rounded-lg border border-slate-200 font-medium text-slate-600"
               >
-                Không
+                Hủy
               </button>
               <button
                 type="button"
@@ -264,20 +273,21 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+        {/* Form Body - Scrollable */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-center gap-2 animate-fade-in">
-              <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-              {error}
+            <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          {/* 1. Loại giao dịch (Khoản Chi vs Khoản Thu) */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl">
+          {/* 1. Chi vs Thu Big Thumb Switcher */}
+          <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl">
             <button
               type="button"
               onClick={() => handleTypeChange('expense')}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                 type === 'expense'
                   ? 'bg-rose-500 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -289,7 +299,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <button
               type="button"
               onClick={() => handleTypeChange('income')}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              className={`flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
                 type === 'income'
                   ? 'bg-emerald-500 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -300,14 +310,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </button>
           </div>
 
-          {/* 2. Số tiền (VNĐ) */}
+          {/* 2. Amount Input & Fast 1-Touch Pills */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-600">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 Số tiền giao dịch <span className="text-rose-500">*</span>
               </label>
-              <span className="text-[11px] text-slate-400 font-medium">Đơn vị: Đồng (VNĐ)</span>
+              {numericAmount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setAmountStr('')}
+                  className="text-[11px] text-slate-400 hover:text-rose-500 underline"
+                >
+                  Xóa số
+                </button>
+              )}
             </div>
+
             <div className="relative">
               <input
                 type="text"
@@ -315,59 +334,56 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 value={amountStr ? parseInt(amountStr, 10).toLocaleString('vi-VN') : ''}
                 onChange={handleAmountInputChange}
                 placeholder="0"
-                className={`w-full text-2xl sm:text-3xl font-extrabold px-4 py-3 rounded-2xl border transition-all outline-hidden text-right pr-14 ${
+                className={`w-full text-2xl sm:text-3xl font-extrabold px-4 py-2.5 sm:py-3 rounded-2xl border transition-all outline-hidden text-right pr-12 ${
                   type === 'expense'
-                    ? 'text-rose-600 border-slate-200 focus:border-rose-400 focus:ring-3 focus:ring-rose-100'
-                    : 'text-emerald-600 border-slate-200 focus:border-emerald-400 focus:ring-3 focus:ring-emerald-100'
+                    ? 'text-rose-600 border-slate-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100'
+                    : 'text-emerald-600 border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100'
                 }`}
                 autoFocus={!editingTransaction}
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
                 ₫
               </span>
             </div>
 
-            {/* Đọc số tiền bằng chữ tiếng Việt */}
+            {/* Vietnamese number-to-words spelling */}
             {numericAmount > 0 && (
-              <div className="p-2.5 mt-1.5 rounded-xl bg-slate-50 border border-slate-100 flex items-start gap-2 text-xs text-slate-600">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 mt-0.5 flex-shrink-0" />
-                <span className="italic font-medium">
+              <div className="p-2 mt-1.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2 text-[11px] text-slate-600">
+                <Sparkles className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                <span className="italic font-medium truncate">
                   {numberToVietnameseWords(numericAmount)}
                 </span>
               </div>
             )}
 
-            {/* Quick Amount Presets */}
-            <div className="flex flex-wrap gap-1.5 mt-2.5">
-              {QUICK_AMOUNTS.map((val) => (
+            {/* Quick 1-Touch Amount Pills */}
+            <div className="grid grid-cols-6 gap-1.5 mt-2">
+              {QUICK_AMOUNTS.map((pill) => (
                 <button
-                  key={val}
+                  key={pill.label}
                   type="button"
-                  onClick={() => handleQuickAmount(val)}
-                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all ${
-                    numericAmount === val
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
+                  onClick={() => handleQuickAddAmount(pill.value)}
+                  className="py-1.5 text-center text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 transition-all border border-slate-200/60"
                 >
-                  +{val >= 1000000 ? `${val / 1000000}tr` : `${val / 1000}k`}
+                  {pill.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* 3. Danh mục */}
+          {/* 3. Category Selector (Compact 4-column Icon Grid) */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-600">
-                Danh mục {type === 'expense' ? 'chi tiêu' : 'thu nhập'}{' '}
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Danh mục {type === 'expense' ? 'Chi tiêu' : 'Thu nhập'}{' '}
                 <span className="text-rose-500">*</span>
               </label>
-              <span className="text-[11px] text-slate-400">
-                {filteredCategories.length} danh mục
+              <span className="text-[10px] text-slate-400">
+                {filteredCategories.length} nhóm
               </span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+
+            <div className="grid grid-cols-4 gap-1.5 max-h-40 overflow-y-auto p-1.5 border border-slate-100 rounded-2xl bg-slate-50/70">
               {filteredCategories.map((cat) => {
                 const isSelected = categoryId === cat.id;
                 return (
@@ -375,19 +391,19 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     key={cat.id}
                     type="button"
                     onClick={() => setCategoryId(cat.id)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-xl border text-center transition-all ${
+                    className={`flex flex-col items-center justify-center p-2 rounded-xl text-center transition-all ${
                       isSelected
-                        ? 'border-indigo-600 bg-white shadow-sm ring-2 ring-indigo-200'
-                        : 'border-transparent bg-white/70 hover:bg-white text-slate-700'
+                        ? 'bg-white shadow-sm ring-2 ring-indigo-500 text-slate-900 font-bold'
+                        : 'hover:bg-white text-slate-600 font-medium'
                     }`}
                   >
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white mb-1 shadow-xs"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-white mb-1 shadow-2xs"
                       style={{ backgroundColor: cat.color }}
                     >
                       <CategoryIcon name={cat.icon} className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-medium truncate w-full">
+                    <span className="text-[10px] leading-tight truncate w-full">
                       {cat.name}
                     </span>
                   </button>
@@ -396,11 +412,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
           </div>
 
-          {/* 4. Thành viên & Ngày giao dịch */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Thành viên */}
+          {/* 4. Family Member 1-Touch Pills & Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Member */}
             <div>
-              <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
                 <User className="w-3.5 h-3.5 text-indigo-500" />
                 Thành viên thực hiện <span className="text-rose-500">*</span>
               </label>
@@ -412,14 +428,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       key={m.id}
                       type="button"
                       onClick={() => setMemberId(m.id)}
-                      className={`py-2 px-2 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition-all ${
+                      className={`py-2 px-1 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
                         isSelected
                           ? 'border-slate-800 bg-slate-800 text-white shadow-xs'
                           : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                       }`}
                     >
                       <span
-                        className="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
+                        className="w-2 h-2 rounded-full inline-block flex-shrink-0"
                         style={{ backgroundColor: m.avatarColor }}
                       />
                       <span className="truncate">{m.name}</span>
@@ -429,18 +445,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               </div>
             </div>
 
-            {/* Ngày giao dịch */}
+            {/* Date */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   <Calendar className="w-3.5 h-3.5 text-indigo-500" />
                   Ngày giao dịch <span className="text-rose-500">*</span>
                 </label>
-                <div className="flex gap-1">
+                <div className="flex gap-1.5">
                   <button
                     type="button"
                     onClick={setDateToday}
-                    className="text-[10px] text-indigo-600 hover:underline font-semibold"
+                    className="text-[10px] text-indigo-600 hover:underline font-bold"
                   >
                     Hôm nay
                   </button>
@@ -458,14 +474,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-hidden font-medium"
+                className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:border-indigo-500 outline-hidden font-semibold"
               />
             </div>
           </div>
 
-          {/* 5. Ghi chú chi tiết & Quick Suggestion Chips */}
+          {/* 5. Ghi chú & Quick suggestions */}
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
               <FileText className="w-3.5 h-3.5 text-indigo-500" />
               Ghi chú chi tiết
             </label>
@@ -473,20 +489,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="VD: Đi siêu thị WinMart, Tiền điện EVN, Học phí tiếng Anh..."
-              className="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-hidden"
+              placeholder="VD: Đi siêu thị WinMart, Tiền điện EVN..."
+              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:border-indigo-400 outline-hidden"
             />
-            {/* Quick note suggestions */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[10px] text-slate-400 flex items-center gap-1 self-center">
-                Gợi ý nhanh:
-              </span>
-              {quickNotes.slice(0, 4).map((qn) => (
+            {/* Quick Suggestions Chips */}
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {quickNotes.slice(0, 5).map((qn) => (
                 <button
                   key={qn}
                   type="button"
                   onClick={() => setNote(qn)}
-                  className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium transition-colors"
+                  className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-600 font-medium transition-colors"
                 >
                   {qn}
                 </button>
@@ -494,21 +507,21 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
           </div>
 
-          {/* 6. Phương thức thanh toán */}
+          {/* 6. Payment Method */}
           <div>
-            <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
               <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
               Hình thức thanh toán
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-4 gap-1">
               {PAYMENT_METHODS.map((pm) => (
                 <button
                   key={pm.id}
                   type="button"
                   onClick={() => setPaymentMethod(pm.id)}
-                  className={`py-1.5 px-2 text-xs rounded-lg border font-medium transition-all ${
+                  className={`py-1.5 text-[11px] rounded-lg border font-semibold transition-all ${
                     paymentMethod === pm.id
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold'
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                       : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -519,23 +532,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+          <div className="pt-2 flex items-center gap-2 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 transition-colors"
+              className="flex-1 py-3 rounded-2xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-colors"
             >
-              Hủy bỏ
+              Hủy
             </button>
             <button
               type="submit"
-              className={`px-6 py-2.5 rounded-xl text-white font-bold text-sm shadow-md transition-all ${
+              className={`flex-2 py-3 rounded-2xl text-white font-extrabold text-sm shadow-md transition-all active:scale-98 ${
                 type === 'expense'
                   ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
                   : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200'
               }`}
             >
-              {editingTransaction ? 'Lưu thay đổi' : 'Xác nhận thêm'}
+              {editingTransaction ? 'Lưu Thay Đổi' : 'Xác Nhận Thêm'}
             </button>
           </div>
         </form>
