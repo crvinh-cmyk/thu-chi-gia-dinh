@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Transaction, Category, FamilyMember, MonthlyBudget, TransactionType } from '../types';
 import { formatVND, formatCompactVND, formatRelativeDateVN } from '../utils/formatters';
-import { DonutChart, ChartSegment } from './Charts/DonutChart';
+import { RechartsExpenseDistribution, CategoryExpenseData } from './Charts/RechartsExpenseDistribution';
 import { MonthlyBarChart, MonthlyStats } from './Charts/MonthlyBarChart';
 import { CategoryIcon } from './CategoryIcon';
 
@@ -88,15 +88,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       expenseByCategory[t.categoryId] = (expenseByCategory[t.categoryId] || 0) + t.amount;
     });
 
-  const donutData: ChartSegment[] = Object.entries(expenseByCategory)
+  const rechartsData: CategoryExpenseData[] = Object.entries(expenseByCategory)
     .map(([catId, amount]) => {
       const cat = categoryMap.get(catId);
+      const percentage = monthlyExpense > 0 ? Math.round((amount / monthlyExpense) * 100) : 0;
       return {
         id: catId,
         name: cat ? cat.name : 'Khác',
         value: amount,
         color: cat ? cat.color : '#94a3b8',
         icon: cat ? cat.icon : 'Tag',
+        percentage,
       };
     })
     .sort((a, b) => b.value - a.value);
@@ -340,10 +342,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
           </div>
 
-          <DonutChart
-            data={donutData}
+          <RechartsExpenseDistribution
+            data={rechartsData}
             totalValue={monthlyExpense}
-            emptyMessage="Chưa có khoản chi tiêu nào trong tháng này"
           />
         </div>
 

@@ -222,8 +222,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Tab Navigation Navigation Bar */}
-        <nav className="flex space-x-1 border-t border-slate-100 py-2 overflow-x-auto scrollbar-none">
+        {/* Tab Navigation Navigation Bar (Desktop & Tablet) */}
+        <nav className="hidden sm:flex space-x-1 border-t border-slate-100 py-2 overflow-x-auto scrollbar-none">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;

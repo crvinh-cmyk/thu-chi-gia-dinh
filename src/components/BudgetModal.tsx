@@ -50,15 +50,15 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 my-8">
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 my-auto max-h-[92vh] flex flex-col">
+        <div className="px-5 sm:px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center flex-shrink-0">
               <Target className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Thiết lập Ngân sách Tháng</h3>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900">Thiết lập Ngân sách Tháng</h3>
               <p className="text-xs text-slate-500">
                 Kiểm soát trần chi tiêu để bảo đảm kế hoạch tiết kiệm của gia đình
               </p>
@@ -72,7 +72,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-6">
+        <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
           {/* Total Budget */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">

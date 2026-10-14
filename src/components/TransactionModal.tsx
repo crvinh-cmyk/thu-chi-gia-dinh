@@ -192,13 +192,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const quickNotes = type === 'expense' ? QUICK_NOTES_EXPENSE : QUICK_NOTES_INCOME;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 my-auto max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold shadow-xs ${
+              className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold shadow-xs flex-shrink-0 ${
                 type === 'expense' ? 'bg-rose-500' : 'bg-emerald-500'
               }`}
             >
@@ -264,7 +264,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-medium flex items-center gap-2 animate-fade-in">
               <span className="w-2 h-2 rounded-full bg-rose-500"></span>

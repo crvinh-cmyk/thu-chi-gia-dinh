@@ -20,6 +20,7 @@ import { CategoriesView } from './components/CategoriesView';
 import { MembersView } from './components/MembersView';
 import { TransactionModal } from './components/TransactionModal';
 import { BudgetModal } from './components/BudgetModal';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>(() => getStoredTransactions());
@@ -132,6 +133,22 @@ export default function App() {
     setCategories((prev) => [...prev, { ...newCat, id }]);
   };
 
+  const handleUpdateCategory = (updatedCat: Category) => {
+    setCategories((prev) =>
+      prev.map((c) => (c.id === updatedCat.id ? updatedCat : c))
+    );
+  };
+
+  const handleUpdateCategoryBudget = (catId: string, amount: number) => {
+    setBudget((prev) => ({
+      ...prev,
+      categoryBudgets: {
+        ...(prev.categoryBudgets || {}),
+        [catId]: amount,
+      },
+    }));
+  };
+
   const handleDeleteCategory = (id: string) => {
     setCategories((prev) => prev.filter((c) => c.id !== id));
   };
@@ -200,7 +217,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 sm:pb-8">
         {currentTab === 'dashboard' && (
           <DashboardView
             currentMonth={currentMonth}
@@ -232,10 +249,14 @@ export default function App() {
           <CategoriesView
             categories={categories}
             transactions={transactions}
+            members={members}
             currentMonth={currentMonth}
             budget={budget}
             onAddCategory={handleAddCategory}
+            onUpdateCategory={handleUpdateCategory}
             onDeleteCategory={handleDeleteCategory}
+            onUpdateCategoryBudget={handleUpdateCategoryBudget}
+            onEditTransaction={handleEditTransaction}
           />
         )}
 
@@ -251,8 +272,15 @@ export default function App() {
         )}
       </main>
 
+      {/* Mobile Bottom Navigation Bar */}
+      <MobileBottomNav
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        onOpenAddModal={() => handleOpenAddModal('expense')}
+      />
+
       {/* Footer */}
-      <footer className="border-t border-slate-200/60 bg-white py-6 text-center text-xs text-slate-400">
+      <footer className="border-t border-slate-200/60 bg-white py-6 text-center text-xs text-slate-400 hidden sm:block">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>© 2026 Quản Lý Thu Chi Gia Đình. Dữ liệu lưu trữ an toàn trên thiết bị của bạn.</p>
           <div className="flex items-center gap-4 text-slate-500 font-medium">
