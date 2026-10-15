@@ -13,19 +13,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenAddModal,
 }) => {
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <nav className="sticky bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex-shrink-0">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {/* Tab 1: Tổng quan */}
         <button
           type="button"
           onClick={() => onSelectTab('dashboard')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 rounded-xl transition-all active:scale-95 ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 transition-all active:scale-95 ${
             currentTab === 'dashboard'
-              ? 'text-indigo-600 font-black'
-              : 'text-slate-400 hover:text-slate-600 font-semibold'
+              ? 'text-zinc-900 font-extrabold'
+              : 'text-zinc-400 hover:text-zinc-600 font-medium'
           }`}
         >
-          <div className={`p-1 rounded-xl transition-colors ${currentTab === 'dashboard' ? 'bg-indigo-50' : ''}`}>
+          <div className={`p-1.5 rounded-2xl transition-colors ${currentTab === 'dashboard' ? 'bg-zinc-100 text-zinc-900' : ''}`}>
             <LayoutDashboard className="w-5 h-5" />
           </div>
           <span className="text-[10px] tracking-tight mt-0.5">Tổng quan</span>
@@ -35,25 +35,25 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <button
           type="button"
           onClick={() => onSelectTab('transactions')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 rounded-xl transition-all active:scale-95 ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 transition-all active:scale-95 ${
             currentTab === 'transactions'
-              ? 'text-indigo-600 font-black'
-              : 'text-slate-400 hover:text-slate-600 font-semibold'
+              ? 'text-zinc-900 font-extrabold'
+              : 'text-zinc-400 hover:text-zinc-600 font-medium'
           }`}
         >
-          <div className={`p-1 rounded-xl transition-colors ${currentTab === 'transactions' ? 'bg-indigo-50' : ''}`}>
+          <div className={`p-1.5 rounded-2xl transition-colors ${currentTab === 'transactions' ? 'bg-zinc-100 text-zinc-900' : ''}`}>
             <ReceiptText className="w-5 h-5" />
           </div>
-          <span className="text-[10px] tracking-tight mt-0.5">Sổ giao dịch</span>
+          <span className="text-[10px] tracking-tight mt-0.5">Sổ thu chi</span>
         </button>
 
-        {/* Center Quick Add Elevated Button */}
+        {/* Center Quick Add Elevated Thumb Button */}
         <div className="flex-1 flex justify-center -mt-6">
           <button
             type="button"
             onClick={onOpenAddModal}
-            className="w-13 h-13 rounded-full bg-gradient-to-tr from-indigo-700 via-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-400/40 border-4 border-white active:scale-90 transition-transform"
-            title="Thêm giao dịch thu chi mới"
+            className="w-12 h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white flex items-center justify-center shadow-lg shadow-zinc-900/25 border-4 border-white active:scale-90 transition-transform"
+            title="Thêm khoản thu chi mới"
           >
             <Plus className="w-6 h-6 stroke-[3]" />
           </button>
@@ -63,13 +63,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <button
           type="button"
           onClick={() => onSelectTab('categories')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 rounded-xl transition-all active:scale-95 ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 transition-all active:scale-95 ${
             currentTab === 'categories'
-              ? 'text-indigo-600 font-black'
-              : 'text-slate-400 hover:text-slate-600 font-semibold'
+              ? 'text-zinc-900 font-extrabold'
+              : 'text-zinc-400 hover:text-zinc-600 font-medium'
           }`}
         >
-          <div className={`p-1 rounded-xl transition-colors ${currentTab === 'categories' ? 'bg-indigo-50' : ''}`}>
+          <div className={`p-1.5 rounded-2xl transition-colors ${currentTab === 'categories' ? 'bg-zinc-100 text-zinc-900' : ''}`}>
             <FolderTree className="w-5 h-5" />
           </div>
           <span className="text-[10px] tracking-tight mt-0.5">Danh mục</span>
@@ -79,13 +79,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         <button
           type="button"
           onClick={() => onSelectTab('members')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 rounded-xl transition-all active:scale-95 ${
+          className={`flex-1 flex flex-col items-center justify-center py-1 transition-all active:scale-95 ${
             currentTab === 'members'
-              ? 'text-indigo-600 font-black'
-              : 'text-slate-400 hover:text-slate-600 font-semibold'
+              ? 'text-zinc-900 font-extrabold'
+              : 'text-zinc-400 hover:text-zinc-600 font-medium'
           }`}
         >
-          <div className={`p-1 rounded-xl transition-colors ${currentTab === 'members' ? 'bg-indigo-50' : ''}`}>
+          <div className={`p-1.5 rounded-2xl transition-colors ${currentTab === 'members' ? 'bg-zinc-100 text-zinc-900' : ''}`}>
             <Users className="w-5 h-5" />
           </div>
           <span className="text-[10px] tracking-tight mt-0.5">Thành viên</span>
@@ -94,3 +94,4 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     </nav>
   );
 };
+

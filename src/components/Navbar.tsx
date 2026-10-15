@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard,
-  ReceiptText,
-  FolderTree,
-  Users,
-  Plus,
+  Home,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -12,8 +8,9 @@ import {
   Download,
   Upload,
   RefreshCw,
-  Home,
   Check,
+  Smartphone,
+  Maximize2,
 } from 'lucide-react';
 import { formatMonthVN } from '../utils/formatters';
 
@@ -26,17 +23,18 @@ interface NavbarProps {
   onResetData: () => void;
   onBackupData: () => void;
   onImportData: (jsonStr: string) => void;
+  isPhoneFrame?: boolean;
+  onTogglePhoneFrame?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  currentTab,
-  onSelectTab,
   currentMonth,
   onChangeMonth,
-  onOpenAddModal,
   onResetData,
   onBackupData,
   onImportData,
+  isPhoneFrame,
+  onTogglePhoneFrame,
 }) => {
   const [showDataMenu, setShowDataMenu] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
@@ -65,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           const content = event.target?.result as string;
           onImportData(content);
           showToast('Nhập dữ liệu thành công!');
-        } catch (err) {
+        } catch {
           alert('Tệp dữ liệu không hợp lệ!');
         }
       };
@@ -79,171 +77,145 @@ export const Navbar: React.FC<NavbarProps> = ({
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const navItems = [
-    { id: 'dashboard', label: 'Tổng quan', icon: LayoutDashboard },
-    { id: 'transactions', label: 'Sổ giao dịch', icon: ReceiptText },
-    { id: 'categories', label: 'Danh mục', icon: FolderTree },
-    { id: 'members', label: 'Thành viên', icon: Users },
-  ] as const;
-
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
-      {/* Toast Alert */}
+    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-zinc-200/80 px-3 py-2 flex-shrink-0">
+      {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-4 right-4 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 animate-bounce">
-          <Check className="w-4 h-4 text-emerald-400" />
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-50 bg-zinc-900 text-white text-xs font-medium px-3.5 py-2 rounded-full shadow-lg flex items-center gap-2 animate-bounce whitespace-nowrap">
+          <Check className="w-3.5 h-3.5 text-emerald-400" />
           <span>{notification}</span>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center shadow-sm shadow-indigo-200">
-              <Home className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-none">
-                  Thu Chi Gia Đình
-                </h1>
-                <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                  PRO
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-                Quản lý tài chính tổ ấm thông minh
-              </p>
-            </div>
+      <div className="flex items-center justify-between gap-2 max-w-lg mx-auto">
+        {/* Brand Logo & Name */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-zinc-900 text-white flex items-center justify-center font-black shadow-xs flex-shrink-0">
+            <Home className="w-4 h-4" />
           </div>
-
-          {/* Month Selector Picker */}
-          <div className="flex items-center bg-slate-100/90 rounded-2xl p-1 border border-slate-200/60 shadow-xs">
-            <button
-              onClick={handlePrevMonth}
-              title="Tháng trước"
-              className="w-7 h-7 rounded-xl hover:bg-white text-slate-600 flex items-center justify-center transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-1.5 px-2">
-              <Calendar className="w-3.5 h-3.5 text-indigo-600 hidden xs:inline" />
-              <span className="text-xs sm:text-sm font-bold text-slate-800 whitespace-nowrap min-w-[90px] text-center">
-                {formatMonthVN(currentMonth)}
-              </span>
-            </div>
-            <button
-              onClick={handleNextMonth}
-              title="Tháng sau"
-              className="w-7 h-7 rounded-xl hover:bg-white text-slate-600 flex items-center justify-center transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Right Header Actions */}
-          <div className="flex items-center gap-2">
-            {/* Quick Add Button */}
-            <button
-              onClick={onOpenAddModal}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold shadow-xs shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span className="hidden sm:inline">Ghi Chép Mới</span>
-              <span className="sm:hidden">Ghi chép</span>
-            </button>
-
-            {/* Data & Backup Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowDataMenu(!showDataMenu)}
-                title="Dữ liệu & Cài đặt"
-                className="w-9 h-9 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors"
-              >
-                <Database className="w-4 h-4" />
-              </button>
-
-              {showDataMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setShowDataMenu(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-40 text-xs animate-fade-in space-y-1">
-                    <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                      Quản lý dữ liệu
-                    </div>
-                    <button
-                      onClick={() => {
-                        onBackupData();
-                        setShowDataMenu(false);
-                      }}
-                      className="w-full text-left px-3.5 py-2 hover:bg-slate-50 flex items-center gap-2.5 text-slate-700 font-medium"
-                    >
-                      <Download className="w-4 h-4 text-indigo-500" />
-                      <span>Sao lưu dữ liệu (Tải về JSON)</span>
-                    </button>
-
-                    <label className="w-full text-left px-3.5 py-2 hover:bg-slate-50 flex items-center gap-2.5 text-slate-700 font-medium cursor-pointer">
-                      <Upload className="w-4 h-4 text-emerald-500" />
-                      <span>Phục hồi từ tệp sao lưu JSON</span>
-                      <input
-                        type="file"
-                        accept=".json"
-                        onChange={handleFileImport}
-                        className="hidden"
-                      />
-                    </label>
-
-                    <div className="border-t border-slate-100 my-1" />
-
-                    <button
-                      onClick={() => {
-                        if (
-                          confirm(
-                            'Bạn có chắc chắn muốn nạp lại dữ liệu mẫu ban đầu? Các giao dịch hiện tại sẽ được thay thế bằng bộ mẫu chuẩn.'
-                          )
-                        ) {
-                          onResetData();
-                          showToast('Đã khôi phục dữ liệu mẫu!');
-                        }
-                        setShowDataMenu(false);
-                      }}
-                      className="w-full text-left px-3.5 py-2 hover:bg-rose-50 flex items-center gap-2.5 text-rose-600 font-medium"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      <span>Khôi phục dữ liệu mẫu</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+          <div className="min-w-0">
+            <h1 className="font-extrabold text-sm text-zinc-900 tracking-tight leading-none truncate">
+              Thu Chi Gia Đình
+            </h1>
+            <p className="text-[10px] text-zinc-400 font-semibold truncate mt-0.5">
+              Sổ tay tài chính di động
+            </p>
           </div>
         </div>
 
-        {/* Tab Navigation Navigation Bar (Desktop & Tablet) */}
-        <nav className="hidden sm:flex space-x-1 border-t border-slate-100 py-2 overflow-x-auto scrollbar-none">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectTab(item.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-                  isActive
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {/* Center Compact Month Navigation Picker */}
+        <div className="flex items-center bg-zinc-100 rounded-xl p-0.5 border border-zinc-200/80">
+          <button
+            type="button"
+            onClick={handlePrevMonth}
+            title="Tháng trước"
+            className="w-6 h-6 rounded-lg hover:bg-white text-zinc-600 flex items-center justify-center transition-colors active:scale-90"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+          <div className="flex items-center gap-1 px-1.5">
+            <Calendar className="w-3 h-3 text-zinc-500" />
+            <span className="text-xs font-black text-zinc-800 whitespace-nowrap min-w-[70px] text-center">
+              {formatMonthVN(currentMonth)}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            title="Tháng sau"
+            className="w-6 h-6 rounded-lg hover:bg-white text-zinc-600 flex items-center justify-center transition-colors active:scale-90"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Right Header Controls (Backup / Frame Toggle) */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {onTogglePhoneFrame && (
+            <button
+              type="button"
+              onClick={onTogglePhoneFrame}
+              title={isPhoneFrame ? 'Mở rộng màn hình' : 'Khung điện thoại 16:9'}
+              className="hidden sm:flex w-8 h-8 rounded-xl border border-zinc-200 text-zinc-600 hover:bg-zinc-100 items-center justify-center transition-colors"
+            >
+              {isPhoneFrame ? (
+                <Maximize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+              )}
+            </button>
+          )}
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowDataMenu(!showDataMenu)}
+              title="Dữ liệu & Cài đặt"
+              className="w-8 h-8 rounded-xl border border-zinc-200 text-zinc-600 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+            >
+              <Database className="w-3.5 h-3.5" />
+            </button>
+
+            {showDataMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowDataMenu(false)}
+                />
+                <div className="absolute right-0 mt-1.5 w-60 bg-white rounded-2xl shadow-xl border border-zinc-100 py-2 z-40 text-xs animate-fade-in space-y-0.5">
+                  <div className="px-3 py-1 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    Sao lưu & Dữ liệu
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onBackupData();
+                      setShowDataMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-zinc-50 flex items-center gap-2 text-zinc-700 font-semibold"
+                  >
+                    <Download className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Tải dữ liệu sao lưu (.JSON)</span>
+                  </button>
+
+                  <label className="w-full text-left px-3 py-2 hover:bg-zinc-50 flex items-center gap-2 text-zinc-700 font-semibold cursor-pointer">
+                    <Upload className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Nạp lại từ tệp sao lưu</span>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileImport}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="border-t border-zinc-100 my-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          'Khôi phục bộ dữ liệu thu chi mẫu ban đầu?'
+                        )
+                      ) {
+                        onResetData();
+                        showToast('Đã nạp lại dữ liệu mẫu!');
+                      }
+                      setShowDataMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-rose-50 flex items-center gap-2 text-rose-600 font-semibold"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Nạp lại dữ liệu mẫu ban đầu</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </header>
   );
 };
+

@@ -21,12 +21,16 @@ import { MembersView } from './components/MembersView';
 import { TransactionModal } from './components/TransactionModal';
 import { BudgetModal } from './components/BudgetModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { Wifi, Battery, Signal } from 'lucide-react';
 
 export default function App() {
   const [transactions, setTransactions] = useState<Transaction[]>(() => getStoredTransactions());
   const [categories, setCategories] = useState<Category[]>(() => getStoredCategories());
   const [members, setMembers] = useState<FamilyMember[]>(() => getStoredMembers());
   const [budget, setBudget] = useState<MonthlyBudget>(() => getStoredBudget());
+
+  // Phone frame simulation toggle for desktop
+  const [isPhoneFrame, setIsPhoneFrame] = useState(true);
 
   // Current selected month: YYYY-MM
   const [currentMonth, setCurrentMonth] = useState<string>(() => {
@@ -116,7 +120,6 @@ export default function App() {
   };
 
   const handleDuplicateTransaction = (tx: Transaction) => {
-    // Open modal as new transaction with copied values
     setEditingTransaction({
       ...tx,
       id: '', // Empty id means new
@@ -203,97 +206,115 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-indigo-500 selection:text-white">
-      {/* Top Navbar */}
-      <Navbar
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        currentMonth={currentMonth}
-        onChangeMonth={setCurrentMonth}
-        onOpenAddModal={() => handleOpenAddModal('expense')}
-        onResetData={handleResetData}
-        onBackupData={handleBackupData}
-        onImportData={handleImportData}
-      />
-
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6 pb-28 sm:pb-8">
-        {currentTab === 'dashboard' && (
-          <DashboardView
-            currentMonth={currentMonth}
-            transactions={transactions}
-            categories={categories}
-            members={members}
-            budget={budget}
-            onOpenAddModal={handleOpenAddModal}
-            onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-            onNavigateToTab={setCurrentTab}
-            onEditTransaction={handleEditTransaction}
-          />
-        )}
-
-        {currentTab === 'transactions' && (
-          <TransactionsView
-            transactions={transactions}
-            categories={categories}
-            members={members}
-            onOpenAddModal={handleOpenAddModal}
-            onEditTransaction={handleEditTransaction}
-            onDeleteTransaction={handleDeleteTransaction}
-            onDuplicateTransaction={handleDuplicateTransaction}
-            currentMonth={currentMonth}
-          />
-        )}
-
-        {currentTab === 'categories' && (
-          <CategoriesView
-            categories={categories}
-            transactions={transactions}
-            members={members}
-            currentMonth={currentMonth}
-            budget={budget}
-            onAddCategory={handleAddCategory}
-            onUpdateCategory={handleUpdateCategory}
-            onDeleteCategory={handleDeleteCategory}
-            onUpdateCategoryBudget={handleUpdateCategoryBudget}
-            onEditTransaction={handleEditTransaction}
-          />
-        )}
-
-        {currentTab === 'members' && (
-          <MembersView
-            members={members}
-            transactions={transactions}
-            categories={categories}
-            currentMonth={currentMonth}
-            onAddMember={handleAddMember}
-            onDeleteMember={handleDeleteMember}
-          />
-        )}
-      </main>
-
-      {/* Mobile Bottom Navigation Bar */}
-      <MobileBottomNav
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        onOpenAddModal={() => handleOpenAddModal('expense')}
-      />
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200/60 bg-white py-6 text-center text-xs text-slate-400 hidden sm:block">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© 2026 Quản Lý Thu Chi Gia Đình. Dữ liệu lưu trữ an toàn trên thiết bị của bạn.</p>
-          <div className="flex items-center gap-4 text-slate-500 font-medium">
-            <span>Tiếng Việt 100%</span>
-            <span>•</span>
-            <span>VNĐ (₫)</span>
-            <span>•</span>
-            <span>Bảo mật nội bộ</span>
+    <div className="min-h-screen bg-zinc-200/60 sm:p-4 flex items-center justify-center selection:bg-zinc-900 selection:text-white font-sans antialiased">
+      {/* Outer Phone Shell Frame Container */}
+      <div
+        className={`w-full bg-zinc-50 flex flex-col relative overflow-hidden transition-all duration-300 ${
+          isPhoneFrame
+            ? 'max-w-[430px] h-screen sm:h-[860px] sm:max-h-[92vh] sm:rounded-[44px] sm:shadow-2xl sm:border-[8px] sm:border-zinc-900'
+            : 'max-w-4xl min-h-screen sm:min-h-[850px] sm:rounded-3xl sm:shadow-xl sm:border border-zinc-200'
+        }`}
+      >
+        {/* Phone Notch & Status Bar (Simulated Mobile Display) */}
+        {isPhoneFrame && (
+          <div className="bg-white pt-2.5 px-6 pb-1.5 flex items-center justify-between text-[11px] font-black text-zinc-900 flex-shrink-0 select-none border-b border-zinc-100">
+            <span>09:41</span>
+            {/* Camera / Island Notch */}
+            <div className="w-24 h-4 bg-zinc-900 rounded-full mx-2 flex-shrink-0" />
+            <div className="flex items-center gap-1.5 text-zinc-800">
+              <Signal className="w-3 h-3" />
+              <Wifi className="w-3 h-3" />
+              <Battery className="w-3.5 h-3.5" />
+            </div>
           </div>
-        </div>
-      </footer>
+        )}
 
-      {/* Transaction Add / Edit Modal */}
+        {/* Top Header Navbar */}
+        <Navbar
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          currentMonth={currentMonth}
+          onChangeMonth={setCurrentMonth}
+          onOpenAddModal={() => handleOpenAddModal('expense')}
+          onResetData={handleResetData}
+          onBackupData={handleBackupData}
+          onImportData={handleImportData}
+          isPhoneFrame={isPhoneFrame}
+          onTogglePhoneFrame={() => setIsPhoneFrame(!isPhoneFrame)}
+        />
+
+        {/* Scrollable Main Phone Screen Content View */}
+        <main className="flex-1 overflow-y-auto p-2.5 sm:p-3 scrollbar-none overscroll-contain">
+          {currentTab === 'dashboard' && (
+            <DashboardView
+              currentMonth={currentMonth}
+              transactions={transactions}
+              categories={categories}
+              members={members}
+              budget={budget}
+              onOpenAddModal={handleOpenAddModal}
+              onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+              onNavigateToTab={setCurrentTab}
+              onEditTransaction={handleEditTransaction}
+            />
+          )}
+
+          {currentTab === 'transactions' && (
+            <TransactionsView
+              transactions={transactions}
+              categories={categories}
+              members={members}
+              onOpenAddModal={handleOpenAddModal}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+              onDuplicateTransaction={handleDuplicateTransaction}
+              currentMonth={currentMonth}
+            />
+          )}
+
+          {currentTab === 'categories' && (
+            <CategoriesView
+              categories={categories}
+              transactions={transactions}
+              members={members}
+              currentMonth={currentMonth}
+              budget={budget}
+              onAddCategory={handleAddCategory}
+              onUpdateCategory={handleUpdateCategory}
+              onDeleteCategory={handleDeleteCategory}
+              onUpdateCategoryBudget={handleUpdateCategoryBudget}
+              onEditTransaction={handleEditTransaction}
+            />
+          )}
+
+          {currentTab === 'members' && (
+            <MembersView
+              members={members}
+              transactions={transactions}
+              categories={categories}
+              currentMonth={currentMonth}
+              onAddMember={handleAddMember}
+              onDeleteMember={handleDeleteMember}
+            />
+          )}
+        </main>
+
+        {/* Bottom Navigation Bar */}
+        <MobileBottomNav
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          onOpenAddModal={() => handleOpenAddModal('expense')}
+        />
+
+        {/* Phone Bottom Home Swipe Bar Indicator */}
+        {isPhoneFrame && (
+          <div className="bg-white py-1 flex justify-center flex-shrink-0">
+            <div className="w-28 h-1 bg-zinc-300 rounded-full" />
+          </div>
+        )}
+      </div>
+
+      {/* Transaction Add / Edit Modal Sheet */}
       <TransactionModal
         isOpen={isTxModalOpen}
         onClose={() => setIsTxModalOpen(false)}
@@ -316,3 +337,4 @@ export default function App() {
     </div>
   );
 }
+
