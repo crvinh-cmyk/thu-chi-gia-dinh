@@ -8,10 +8,10 @@ import {
 import { formatDateVN, formatVND } from './formatters';
 
 const STORAGE_KEYS = {
-  TRANSACTIONS: 'family_finance_transactions_v1',
-  CATEGORIES: 'family_finance_categories_v1',
-  MEMBERS: 'family_finance_members_v1',
-  BUDGET: 'family_finance_budget_v1',
+  TRANSACTIONS: 'family_finance_transactions_v2',
+  CATEGORIES: 'family_finance_categories_v2',
+  MEMBERS: 'family_finance_members_v2',
+  BUDGET: 'family_finance_budget_v2',
 };
 
 export function getStoredTransactions(): Transaction[] {
