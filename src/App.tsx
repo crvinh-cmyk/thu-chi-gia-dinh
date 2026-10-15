@@ -17,7 +17,6 @@ import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
 import { TransactionsView } from './components/TransactionsView';
 import { CategoriesView } from './components/CategoriesView';
-import { MembersView } from './components/MembersView';
 import { TransactionModal } from './components/TransactionModal';
 import { BudgetModal } from './components/BudgetModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
@@ -39,7 +38,7 @@ export default function App() {
   });
 
   // Current tab
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'transactions' | 'categories' | 'members'>('dashboard');
+  const [currentTab, setCurrentTab] = useState<'dashboard' | 'transactions' | 'categories'>('dashboard');
 
   // Modals state
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
@@ -63,6 +62,73 @@ export default function App() {
   useEffect(() => {
     saveStoredBudget(budget);
   }, [budget]);
+
+  // Tab switcher with browser history state for phone Back button
+  const handleSelectTab = (tab: 'dashboard' | 'transactions' | 'categories') => {
+    if (tab !== currentTab) {
+      window.history.pushState({ tab, modal: null }, '', `#${tab}`);
+      setCurrentTab(tab);
+    }
+  };
+
+  // Open modal handlers with history state
+  const handleOpenAddModal = (type: TransactionType = 'expense') => {
+    setEditingTransaction(null);
+    setTxModalDefaultType(type);
+    setIsTxModalOpen(true);
+    window.history.pushState({ tab: currentTab, modal: 'txModal' }, '', '#modal');
+  };
+
+  const handleEditTransaction = (tx: Transaction) => {
+    setEditingTransaction(tx);
+    setTxModalDefaultType(tx.type);
+    setIsTxModalOpen(true);
+    window.history.pushState({ tab: currentTab, modal: 'txModal' }, '', '#modal');
+  };
+
+  const handleDuplicateTransaction = (tx: Transaction) => {
+    setEditingTransaction({
+      ...tx,
+      id: '', // Empty id means new
+      date: new Date().toISOString().split('T')[0],
+      note: tx.note ? `${tx.note} (Sao chép)` : '',
+    });
+    setTxModalDefaultType(tx.type);
+    setIsTxModalOpen(true);
+    window.history.pushState({ tab: currentTab, modal: 'txModal' }, '', '#modal');
+  };
+
+  const handleOpenBudgetModal = () => {
+    setIsBudgetModalOpen(true);
+    window.history.pushState({ tab: currentTab, modal: 'budgetModal' }, '', '#modal');
+  };
+
+  // Setup history popstate listener for phone physical Back button
+  useEffect(() => {
+    // Set initial state if not present
+    if (!window.history.state) {
+      window.history.replaceState({ tab: 'dashboard', modal: null }, '', '#dashboard');
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      // 1. If any modal is open, close modal
+      if (isTxModalOpen || isBudgetModalOpen) {
+        setIsTxModalOpen(false);
+        setIsBudgetModalOpen(false);
+        return;
+      }
+
+      // 2. Otherwise navigate to tab in history or fallback to home dashboard
+      if (e.state && e.state.tab) {
+        setCurrentTab(e.state.tab);
+      } else {
+        setCurrentTab('dashboard');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isTxModalOpen, isBudgetModalOpen]);
 
   // Handle transaction save (create or update)
   const handleSaveTransaction = (
@@ -107,28 +173,6 @@ export default function App() {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const handleOpenAddModal = (type: TransactionType = 'expense') => {
-    setEditingTransaction(null);
-    setTxModalDefaultType(type);
-    setIsTxModalOpen(true);
-  };
-
-  const handleEditTransaction = (tx: Transaction) => {
-    setEditingTransaction(tx);
-    setTxModalDefaultType(tx.type);
-    setIsTxModalOpen(true);
-  };
-
-  const handleDuplicateTransaction = (tx: Transaction) => {
-    setEditingTransaction({
-      ...tx,
-      id: '', // Empty id means new
-      date: new Date().toISOString().split('T')[0],
-      note: tx.note ? `${tx.note} (Sao chép)` : '',
-    });
-    setTxModalDefaultType(tx.type);
-    setIsTxModalOpen(true);
-  };
 
   // Category handlers
   const handleAddCategory = (newCat: Omit<Category, 'id'>) => {
@@ -232,7 +276,7 @@ export default function App() {
         {/* Top Header Navbar */}
         <Navbar
           currentTab={currentTab}
-          onSelectTab={setCurrentTab}
+          onSelectTab={handleSelectTab}
           currentMonth={currentMonth}
           onChangeMonth={setCurrentMonth}
           onOpenAddModal={() => handleOpenAddModal('expense')}
@@ -253,8 +297,8 @@ export default function App() {
               members={members}
               budget={budget}
               onOpenAddModal={handleOpenAddModal}
-              onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-              onNavigateToTab={setCurrentTab}
+              onOpenBudgetModal={handleOpenBudgetModal}
+              onNavigateToTab={handleSelectTab}
               onEditTransaction={handleEditTransaction}
             />
           )}
@@ -286,23 +330,12 @@ export default function App() {
               onEditTransaction={handleEditTransaction}
             />
           )}
-
-          {currentTab === 'members' && (
-            <MembersView
-              members={members}
-              transactions={transactions}
-              categories={categories}
-              currentMonth={currentMonth}
-              onAddMember={handleAddMember}
-              onDeleteMember={handleDeleteMember}
-            />
-          )}
         </main>
 
         {/* Bottom Navigation Bar */}
         <MobileBottomNav
           currentTab={currentTab}
-          onSelectTab={setCurrentTab}
+          onSelectTab={handleSelectTab}
           onOpenAddModal={() => handleOpenAddModal('expense')}
         />
 

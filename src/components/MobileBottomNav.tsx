@@ -1,9 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, ReceiptText, FolderTree, Users, Plus } from 'lucide-react';
+import { LayoutDashboard, ReceiptText, FolderTree, Plus } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  currentTab: 'dashboard' | 'transactions' | 'categories' | 'members';
-  onSelectTab: (tab: 'dashboard' | 'transactions' | 'categories' | 'members') => void;
+  currentTab: 'dashboard' | 'transactions' | 'categories';
+  onSelectTab: (tab: 'dashboard' | 'transactions' | 'categories') => void;
   onOpenAddModal: () => void;
 }
 
@@ -13,7 +13,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenAddModal,
 }) => {
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex-shrink-0">
+    <nav className="sticky bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-3 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex-shrink-0">
       <div className="flex items-center justify-around max-w-md mx-auto">
         {/* Tab 1: Tổng quan */}
         <button
@@ -74,24 +74,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           </div>
           <span className="text-[10px] tracking-tight mt-0.5">Danh mục</span>
         </button>
-
-        {/* Tab 4: Thành viên */}
-        <button
-          type="button"
-          onClick={() => onSelectTab('members')}
-          className={`flex-1 flex flex-col items-center justify-center py-1 transition-all active:scale-95 ${
-            currentTab === 'members'
-              ? 'text-zinc-900 font-extrabold'
-              : 'text-zinc-400 hover:text-zinc-600 font-medium'
-          }`}
-        >
-          <div className={`p-1.5 rounded-2xl transition-colors ${currentTab === 'members' ? 'bg-zinc-100 text-zinc-900' : ''}`}>
-            <Users className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] tracking-tight mt-0.5">Thành viên</span>
-        </button>
       </div>
     </nav>
   );
 };
+
 

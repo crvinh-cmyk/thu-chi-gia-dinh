@@ -26,7 +26,7 @@ interface DashboardViewProps {
   budget: MonthlyBudget;
   onOpenAddModal: (type: TransactionType) => void;
   onOpenBudgetModal: () => void;
-  onNavigateToTab: (tab: 'dashboard' | 'transactions' | 'categories' | 'members') => void;
+  onNavigateToTab: (tab: 'dashboard' | 'transactions' | 'categories') => void;
   onEditTransaction: (tx: Transaction) => void;
 }
 
@@ -323,65 +323,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           data={rechartsData}
           totalValue={monthlyExpense}
         />
-      </div>
-
-      {/* 5. Member Spending Summary */}
-      <div className="bg-white rounded-2xl p-3.5 border border-zinc-200/70 shadow-2xs">
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-zinc-700" />
-            <h4 className="text-xs font-black text-zinc-900">
-              Chi tiêu theo Thành viên
-            </h4>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigateToTab('members')}
-            className="text-[11px] font-bold text-zinc-500 hover:text-zinc-900 flex items-center"
-          >
-            Tất cả <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          {members.map((member) => {
-            const spent = expenseByMember[member.id] || 0;
-            const pct = monthlyExpense > 0 ? Math.round((spent / monthlyExpense) * 100) : 0;
-
-            return (
-              <div key={member.id} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="w-2 h-2 rounded-full inline-block flex-shrink-0"
-                      style={{ backgroundColor: member.avatarColor }}
-                    />
-                    <span className="font-bold text-zinc-800 text-xs truncate">
-                      {member.name}
-                    </span>
-                    <span className="text-[9px] font-semibold text-zinc-400 bg-zinc-100 px-1 py-0.2 rounded">
-                      {member.role}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className="font-extrabold text-zinc-900 text-xs">{formatVND(spent)}</span>
-                    <span className="text-[10px] text-zinc-400">({pct}%)</span>
-                  </div>
-                </div>
-
-                <div className="w-full bg-zinc-100 rounded-full h-1 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${pct}%`,
-                      backgroundColor: member.avatarColor,
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* 6. Recent Transactions List Cards */}

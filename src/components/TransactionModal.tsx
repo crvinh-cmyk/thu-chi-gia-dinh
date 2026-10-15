@@ -155,11 +155,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       return;
     }
 
-    if (!memberId) {
-      setError('Vui lòng chọn thành viên');
-      return;
-    }
-
     if (!date) {
       setError('Vui lòng chọn ngày giao dịch');
       return;
@@ -170,7 +165,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       type,
       amount: numericAmount,
       categoryId,
-      memberId,
+      memberId: memberId || members[0]?.id || 'me',
       date,
       note: note.trim(),
       paymentMethod,
@@ -412,71 +407,37 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
           </div>
 
-          {/* 4. Family Member 1-Touch Pills & Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Member */}
-            <div>
-              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                <User className="w-3.5 h-3.5 text-indigo-500" />
-                Thành viên thực hiện <span className="text-rose-500">*</span>
+          {/* 4. Date Selector */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                <Calendar className="w-3.5 h-3.5 text-zinc-700" />
+                Ngày giao dịch <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {members.map((m) => {
-                  const isSelected = memberId === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setMemberId(m.id)}
-                      className={`py-2 px-1 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all ${
-                        isSelected
-                          ? 'border-slate-800 bg-slate-800 text-white shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full inline-block flex-shrink-0"
-                        style={{ backgroundColor: m.avatarColor }}
-                      />
-                      <span className="truncate">{m.name}</span>
-                    </button>
-                  );
-                })}
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={setDateToday}
+                  className="text-[10px] text-zinc-900 hover:underline font-bold"
+                >
+                  Hôm nay
+                </button>
+                <span className="text-[10px] text-zinc-300">•</span>
+                <button
+                  type="button"
+                  onClick={setDateYesterday}
+                  className="text-[10px] text-zinc-500 hover:underline font-medium"
+                >
+                  Hôm qua
+                </button>
               </div>
             </div>
-
-            {/* Date */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                  Ngày giao dịch <span className="text-rose-500">*</span>
-                </label>
-                <div className="flex gap-1.5">
-                  <button
-                    type="button"
-                    onClick={setDateToday}
-                    className="text-[10px] text-indigo-600 hover:underline font-bold"
-                  >
-                    Hôm nay
-                  </button>
-                  <span className="text-[10px] text-slate-300">•</span>
-                  <button
-                    type="button"
-                    onClick={setDateYesterday}
-                    className="text-[10px] text-slate-500 hover:underline font-medium"
-                  >
-                    Hôm qua
-                  </button>
-                </div>
-              </div>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:border-indigo-500 outline-hidden font-semibold"
-              />
-            </div>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 focus:border-zinc-800 outline-hidden font-semibold"
+            />
           </div>
 
           {/* 5. Ghi chú & Quick suggestions */}

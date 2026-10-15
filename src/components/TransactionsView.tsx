@@ -437,13 +437,6 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                             {formatRelativeDateVN(tx.date)}
                           </span>
                           <span>•</span>
-                          <span
-                            className="font-bold"
-                            style={{ color: mem ? mem.avatarColor : '#64748b' }}
-                          >
-                            {mem ? mem.name : ''}
-                          </span>
-                          <span>•</span>
                           <span className="truncate">{cat ? cat.name : ''}</span>
                         </div>
                       </div>

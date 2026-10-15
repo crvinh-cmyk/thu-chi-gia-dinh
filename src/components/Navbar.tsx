@@ -15,8 +15,8 @@ import {
 import { formatMonthVN } from '../utils/formatters';
 
 interface NavbarProps {
-  currentTab: 'dashboard' | 'transactions' | 'categories' | 'members';
-  onSelectTab: (tab: 'dashboard' | 'transactions' | 'categories' | 'members') => void;
+  currentTab: 'dashboard' | 'transactions' | 'categories';
+  onSelectTab: (tab: 'dashboard' | 'transactions' | 'categories') => void;
   currentMonth: string; // YYYY-MM
   onChangeMonth: (newMonth: string) => void;
   onOpenAddModal: () => void;
