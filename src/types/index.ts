@@ -35,3 +35,17 @@ export interface MonthlyBudget {
   totalBudget: number;
   categoryBudgets: Record<string, number>;
 }
+
+export type GoldTransactionType = 'import' | 'export'; // 'import': Nhập/Mua (+Vàng), 'export': Xuất/Bán (-Vàng)
+
+export interface GoldTransaction {
+  id: string;
+  type: GoldTransactionType;
+  amountPhan: number; // Số phân (1 chỉ = 10 phân)
+  date: string; // YYYY-MM-DD
+  reason: string; // Lý do xuất/nhập vàng
+  goldType?: string; // Ví dụ: Vàng Nhẫn, Vàng SJC, Vàng 9999, Trang sức
+  priceVND?: number; // Số tiền mua/bán (VNĐ, tùy chọn)
+  createdAt: string;
+}
+

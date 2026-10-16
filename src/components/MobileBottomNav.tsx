@@ -1,9 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, ReceiptText, FolderTree, Plus } from 'lucide-react';
+import { LayoutDashboard, ReceiptText, FolderTree, Coins, Plus } from 'lucide-react';
 
 interface MobileBottomNavProps {
-  currentTab: 'dashboard' | 'transactions' | 'categories';
-  onSelectTab: (tab: 'dashboard' | 'transactions' | 'categories') => void;
+  currentTab: 'dashboard' | 'transactions' | 'gold' | 'categories';
+  onSelectTab: (tab: 'dashboard' | 'transactions' | 'gold' | 'categories') => void;
   onOpenAddModal: () => void;
 }
 
@@ -13,8 +13,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenAddModal,
 }) => {
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-3 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex-shrink-0">
-      <div className="flex items-center justify-around max-w-md mx-auto">
+    <nav className="sticky bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-zinc-200/80 px-2 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] flex-shrink-0">
+      <div className="flex items-center justify-between max-w-md mx-auto">
         {/* Tab 1: Tổng quan */}
         <button
           type="button"
@@ -31,7 +31,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <span className="text-[10px] tracking-tight mt-0.5">Tổng quan</span>
         </button>
 
-        {/* Tab 2: Sổ giao dịch */}
+        {/* Tab 2: Sổ thu chi */}
         <button
           type="button"
           onClick={() => onSelectTab('transactions')}
@@ -59,7 +59,23 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           </button>
         </div>
 
-        {/* Tab 3: Danh mục */}
+        {/* Tab 3: Sổ Vàng */}
+        <button
+          type="button"
+          onClick={() => onSelectTab('gold')}
+          className={`flex-1 flex flex-col items-center justify-center py-1 transition-all active:scale-95 ${
+            currentTab === 'gold'
+              ? 'text-amber-600 font-extrabold'
+              : 'text-zinc-400 hover:text-zinc-600 font-medium'
+          }`}
+        >
+          <div className={`p-1.5 rounded-2xl transition-colors ${currentTab === 'gold' ? 'bg-amber-100 text-amber-700' : ''}`}>
+            <Coins className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">Sổ Vàng</span>
+        </button>
+
+        {/* Tab 4: Danh mục */}
         <button
           type="button"
           onClick={() => onSelectTab('categories')}
@@ -78,5 +94,3 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     </nav>
   );
 };
-
-

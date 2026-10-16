@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Transaction, Category, FamilyMember, MonthlyBudget, TransactionType } from './types';
+import {
+  Transaction,
+  Category,
+  FamilyMember,
+  MonthlyBudget,
+  TransactionType,
+  GoldTransaction,
+  GoldTransactionType,
+} from './types';
 import {
   getStoredTransactions,
   saveStoredTransactions,
@@ -9,6 +17,8 @@ import {
   saveStoredMembers,
   getStoredBudget,
   saveStoredBudget,
+  getStoredGoldTransactions,
+  saveStoredGoldTransactions,
   resetAllDataToDefault,
   exportBackupJSON,
 } from './utils/storage';
@@ -17,8 +27,10 @@ import { Navbar } from './components/Navbar';
 import { DashboardView } from './components/DashboardView';
 import { TransactionsView } from './components/TransactionsView';
 import { CategoriesView } from './components/CategoriesView';
+import { GoldView } from './components/GoldView';
 import { TransactionModal } from './components/TransactionModal';
 import { BudgetModal } from './components/BudgetModal';
+import { GoldModal } from './components/GoldModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { Wifi, Battery, Signal } from 'lucide-react';
 
@@ -27,6 +39,7 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>(() => getStoredCategories());
   const [members, setMembers] = useState<FamilyMember[]>(() => getStoredMembers());
   const [budget, setBudget] = useState<MonthlyBudget>(() => getStoredBudget());
+  const [goldTransactions, setGoldTransactions] = useState<GoldTransaction[]>(() => getStoredGoldTransactions());
 
   // Phone frame simulation toggle for desktop
   const [isPhoneFrame, setIsPhoneFrame] = useState(true);
@@ -37,14 +50,19 @@ export default function App() {
     return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
   });
 
-  // Current tab
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'transactions' | 'categories'>('dashboard');
+  // Current active tab
+  const [currentTab, setCurrentTab] = useState<'dashboard' | 'transactions' | 'gold' | 'categories'>('dashboard');
 
   // Modals state
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
   const [txModalDefaultType, setTxModalDefaultType] = useState<TransactionType>('expense');
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+
+  // Gold modal state
+  const [isGoldModalOpen, setIsGoldModalOpen] = useState(false);
+  const [goldModalDefaultType, setGoldModalDefaultType] = useState<GoldTransactionType>('import');
+  const [editingGoldTx, setEditingGoldTx] = useState<GoldTransaction | null>(null);
 
   // Sync to local storage
   useEffect(() => {
@@ -63,15 +81,19 @@ export default function App() {
     saveStoredBudget(budget);
   }, [budget]);
 
+  useEffect(() => {
+    saveStoredGoldTransactions(goldTransactions);
+  }, [goldTransactions]);
+
   // Tab switcher with browser history state for phone Back button
-  const handleSelectTab = (tab: 'dashboard' | 'transactions' | 'categories') => {
+  const handleSelectTab = (tab: 'dashboard' | 'transactions' | 'gold' | 'categories') => {
     if (tab !== currentTab) {
       window.history.pushState({ tab, modal: null }, '', `#${tab}`);
       setCurrentTab(tab);
     }
   };
 
-  // Open modal handlers with history state
+  // Open transaction modal handlers with history state
   const handleOpenAddModal = (type: TransactionType = 'expense') => {
     setEditingTransaction(null);
     setTxModalDefaultType(type);
@@ -103,22 +125,37 @@ export default function App() {
     window.history.pushState({ tab: currentTab, modal: 'budgetModal' }, '', '#modal');
   };
 
-  // Setup history popstate listener for phone physical Back button
+  // Gold modal handlers
+  const handleOpenGoldModal = (type: GoldTransactionType = 'import') => {
+    setEditingGoldTx(null);
+    setGoldModalDefaultType(type);
+    setIsGoldModalOpen(true);
+    window.history.pushState({ tab: currentTab, modal: 'goldModal' }, '', '#gold-modal');
+  };
+
+  const handleEditGoldTransaction = (tx: GoldTransaction) => {
+    setEditingGoldTx(tx);
+    setGoldModalDefaultType(tx.type);
+    setIsGoldModalOpen(true);
+    window.history.pushState({ tab: currentTab, modal: 'goldModal' }, '', '#gold-modal');
+  };
+
+  // Setup history popstate listener for physical phone Back button
   useEffect(() => {
-    // Set initial state if not present
     if (!window.history.state) {
       window.history.replaceState({ tab: 'dashboard', modal: null }, '', '#dashboard');
     }
 
     const handlePopState = (e: PopStateEvent) => {
-      // 1. If any modal is open, close modal
-      if (isTxModalOpen || isBudgetModalOpen) {
+      // 1. If any modal is open, close modal first
+      if (isTxModalOpen || isBudgetModalOpen || isGoldModalOpen) {
         setIsTxModalOpen(false);
         setIsBudgetModalOpen(false);
+        setIsGoldModalOpen(false);
         return;
       }
 
-      // 2. Otherwise navigate to tab in history or fallback to home dashboard
+      // 2. Otherwise navigate to tab in history or fallback to dashboard
       if (e.state && e.state.tab) {
         setCurrentTab(e.state.tab);
       } else {
@@ -128,14 +165,13 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [isTxModalOpen, isBudgetModalOpen]);
+  }, [isTxModalOpen, isBudgetModalOpen, isGoldModalOpen]);
 
-  // Handle transaction save (create or update)
+  // Handle Money transaction save (create or update)
   const handleSaveTransaction = (
     txData: Omit<Transaction, 'id' | 'createdAt'> & { id?: string }
   ) => {
     if (txData.id) {
-      // Update existing
       setTransactions((prev) =>
         prev.map((t) =>
           t.id === txData.id
@@ -153,7 +189,6 @@ export default function App() {
         )
       );
     } else {
-      // Create new
       const newTx: Transaction = {
         id: `tx-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         type: txData.type,
@@ -173,6 +208,44 @@ export default function App() {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
+  // Handle Gold transaction save (create or update)
+  const handleSaveGoldTransaction = (
+    txData: Omit<GoldTransaction, 'id' | 'createdAt'> & { id?: string }
+  ) => {
+    if (txData.id) {
+      setGoldTransactions((prev) =>
+        prev.map((t) =>
+          t.id === txData.id
+            ? {
+                ...t,
+                type: txData.type,
+                amountPhan: txData.amountPhan,
+                date: txData.date,
+                reason: txData.reason,
+                goldType: txData.goldType,
+                priceVND: txData.priceVND,
+              }
+            : t
+        )
+      );
+    } else {
+      const newGoldTx: GoldTransaction = {
+        id: `gold-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        type: txData.type,
+        amountPhan: txData.amountPhan,
+        date: txData.date,
+        reason: txData.reason,
+        goldType: txData.goldType,
+        priceVND: txData.priceVND,
+        createdAt: new Date().toISOString(),
+      };
+      setGoldTransactions((prev) => [newGoldTx, ...prev]);
+    }
+  };
+
+  const handleDeleteGoldTransaction = (id: string) => {
+    setGoldTransactions((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Category handlers
   const handleAddCategory = (newCat: Omit<Category, 'id'>) => {
@@ -200,16 +273,6 @@ export default function App() {
     setCategories((prev) => prev.filter((c) => c.id !== id));
   };
 
-  // Member handlers
-  const handleAddMember = (newMem: Omit<FamilyMember, 'id'>) => {
-    const id = `mem-${Date.now()}`;
-    setMembers((prev) => [...prev, { ...newMem, id }]);
-  };
-
-  const handleDeleteMember = (id: string) => {
-    setMembers((prev) => prev.filter((m) => m.id !== id));
-  };
-
   // Budget handler
   const handleSaveBudget = (newBudget: MonthlyBudget) => {
     setBudget(newBudget);
@@ -222,10 +285,11 @@ export default function App() {
     setCategories(ALL_DEFAULT_CATEGORIES);
     setMembers(DEFAULT_MEMBERS);
     setBudget(DEFAULT_BUDGET);
+    setGoldTransactions([]);
   };
 
   const handleBackupData = () => {
-    exportBackupJSON(transactions, categories, members, budget);
+    exportBackupJSON(transactions, categories, members, budget, goldTransactions);
   };
 
   const handleImportData = (jsonStr: string) => {
@@ -243,6 +307,9 @@ export default function App() {
       if (data.budget) {
         setBudget(data.budget);
       }
+      if (data.goldTransactions && Array.isArray(data.goldTransactions)) {
+        setGoldTransactions(data.goldTransactions);
+      }
     } catch (err) {
       console.error('Import error', err);
       alert('Tệp dữ liệu sao lưu không đúng định dạng!');
@@ -250,18 +317,18 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-200/60 sm:p-4 flex items-center justify-center selection:bg-zinc-900 selection:text-white font-sans antialiased">
+    <div className="min-h-[100dvh] w-full max-w-full bg-zinc-200/60 sm:p-4 flex items-center justify-center selection:bg-zinc-900 selection:text-white font-sans antialiased overflow-x-hidden">
       {/* Outer Phone Shell Frame Container */}
       <div
-        className={`w-full bg-zinc-50 flex flex-col relative overflow-hidden transition-all duration-300 ${
+        className={`w-full max-w-full bg-zinc-50 flex flex-col relative overflow-x-hidden transition-all duration-300 ${
           isPhoneFrame
-            ? 'max-w-[430px] h-screen sm:h-[860px] sm:max-h-[92vh] sm:rounded-[44px] sm:shadow-2xl sm:border-[8px] sm:border-zinc-900'
-            : 'max-w-4xl min-h-screen sm:min-h-[850px] sm:rounded-3xl sm:shadow-xl sm:border border-zinc-200'
+            ? 'sm:max-w-[430px] h-[100dvh] sm:h-[860px] sm:max-h-[92vh] sm:rounded-[44px] sm:shadow-2xl sm:border-[8px] sm:border-zinc-900'
+            : 'max-w-4xl min-h-[100dvh] sm:min-h-[850px] sm:rounded-3xl sm:shadow-xl sm:border border-zinc-200'
         }`}
       >
-        {/* Phone Notch & Status Bar (Simulated Mobile Display) */}
+        {/* Phone Notch & Status Bar (Simulated Mobile Display on Desktop) */}
         {isPhoneFrame && (
-          <div className="bg-white pt-2.5 px-6 pb-1.5 flex items-center justify-between text-[11px] font-black text-zinc-900 flex-shrink-0 select-none border-b border-zinc-100">
+          <div className="hidden sm:flex bg-white pt-2.5 px-6 pb-1.5 items-center justify-between text-[11px] font-black text-zinc-900 flex-shrink-0 select-none border-b border-zinc-100">
             <span>09:41</span>
             {/* Camera / Island Notch */}
             <div className="w-24 h-4 bg-zinc-900 rounded-full mx-2 flex-shrink-0" />
@@ -288,7 +355,7 @@ export default function App() {
         />
 
         {/* Scrollable Main Phone Screen Content View */}
-        <main className="flex-1 overflow-y-auto p-2.5 sm:p-3 scrollbar-none overscroll-contain">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-2.5 sm:p-3 scrollbar-none overscroll-contain w-full max-w-full min-w-0">
           {currentTab === 'dashboard' && (
             <DashboardView
               currentMonth={currentMonth}
@@ -316,6 +383,15 @@ export default function App() {
             />
           )}
 
+          {currentTab === 'gold' && (
+            <GoldView
+              goldTransactions={goldTransactions}
+              onOpenModal={handleOpenGoldModal}
+              onEditTransaction={handleEditGoldTransaction}
+              onDeleteTransaction={handleDeleteGoldTransaction}
+            />
+          )}
+
           {currentTab === 'categories' && (
             <CategoriesView
               categories={categories}
@@ -339,9 +415,9 @@ export default function App() {
           onOpenAddModal={() => handleOpenAddModal('expense')}
         />
 
-        {/* Phone Bottom Home Swipe Bar Indicator */}
+        {/* Phone Bottom Home Swipe Bar Indicator (Simulated on Desktop) */}
         {isPhoneFrame && (
-          <div className="bg-white py-1 flex justify-center flex-shrink-0">
+          <div className="hidden sm:flex bg-white py-1 justify-center flex-shrink-0">
             <div className="w-28 h-1 bg-zinc-300 rounded-full" />
           </div>
         )}
@@ -367,7 +443,15 @@ export default function App() {
         expenseCategories={categories.filter((c) => c.type === 'expense')}
         onSaveBudget={handleSaveBudget}
       />
+
+      {/* Gold Transaction Modal */}
+      <GoldModal
+        isOpen={isGoldModalOpen}
+        onClose={() => setIsGoldModalOpen(false)}
+        onSave={handleSaveGoldTransaction}
+        defaultType={goldModalDefaultType}
+        editingTransaction={editingGoldTx}
+      />
     </div>
   );
 }
-

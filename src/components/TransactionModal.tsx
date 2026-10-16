@@ -187,12 +187,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const quickNotes = type === 'expense' ? QUICK_NOTES_EXPENSE : QUICK_NOTES_INCOME;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-hidden">
-      {/* Background click to dismiss on desktop */}
-      <div className="hidden sm:block absolute inset-0 -z-10" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in overflow-x-hidden">
+      {/* Background click to dismiss */}
+      <div className="absolute inset-0 -z-10" onClick={onClose} />
 
       {/* Drawer / Modal Container */}
-      <div className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-100 max-h-[92vh] flex flex-col animate-slide-up sm:animate-fade-in">
+      <div className="w-full max-w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-100 max-h-[92vh] flex flex-col animate-slide-up sm:animate-fade-in">
         {/* Mobile Pull Handle */}
         <div className="sm:hidden pt-3 pb-1 flex justify-center">
           <div className="w-12 h-1.5 bg-slate-200 rounded-full" />

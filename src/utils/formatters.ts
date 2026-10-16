@@ -124,3 +124,30 @@ export function numberToVietnameseWords(n: number): string {
   const capitalized = words.charAt(0).toUpperCase() + words.slice(1);
   return `${capitalized} đồng`;
 }
+
+/**
+ * Format gold quantity in Phân into readable string with Chỉ and Phân:
+ * E.g., 25 phan -> "2 chỉ 5 phân"
+ * 10 phan -> "1 chỉ"
+ * 5 phan -> "5 phân"
+ */
+export function formatGoldQuantity(totalPhan: number): string {
+  if (totalPhan === undefined || totalPhan === null || isNaN(totalPhan) || totalPhan === 0) {
+    return '0 phân';
+  }
+  const absPhan = Math.abs(totalPhan);
+  const chi = Math.floor(absPhan / 10);
+  const phan = Math.round((absPhan % 10) * 100) / 100;
+
+  let str = '';
+  if (chi > 0 && phan > 0) {
+    str = `${chi} chỉ ${phan} phân`;
+  } else if (chi > 0) {
+    str = `${chi} chỉ`;
+  } else {
+    str = `${phan} phân`;
+  }
+
+  return totalPhan < 0 ? `-${str}` : str;
+}
+

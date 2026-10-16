@@ -1,4 +1,4 @@
-import { Transaction, Category, FamilyMember, MonthlyBudget } from '../types';
+import { Transaction, Category, FamilyMember, MonthlyBudget, GoldTransaction } from '../types';
 import {
   ALL_DEFAULT_CATEGORIES,
   DEFAULT_MEMBERS,
@@ -12,6 +12,7 @@ const STORAGE_KEYS = {
   CATEGORIES: 'family_finance_categories_v2',
   MEMBERS: 'family_finance_members_v2',
   BUDGET: 'family_finance_budget_v2',
+  GOLD: 'family_finance_gold_v2',
 };
 
 export function getStoredTransactions(): Transaction[] {
@@ -102,11 +103,34 @@ export function saveStoredBudget(budget: MonthlyBudget) {
   }
 }
 
+export function getStoredGoldTransactions(): GoldTransaction[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.GOLD);
+    if (!raw) {
+      localStorage.setItem(STORAGE_KEYS.GOLD, JSON.stringify([]));
+      return [];
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load gold transactions', e);
+    return [];
+  }
+}
+
+export function saveStoredGoldTransactions(goldTxs: GoldTransaction[]) {
+  try {
+    localStorage.setItem(STORAGE_KEYS.GOLD, JSON.stringify(goldTxs));
+  } catch (e) {
+    console.error('Failed to save gold transactions', e);
+  }
+}
+
 export function resetAllDataToDefault() {
   localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(INITIAL_TRANSACTIONS));
   localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(ALL_DEFAULT_CATEGORIES));
   localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(DEFAULT_MEMBERS));
   localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(DEFAULT_BUDGET));
+  localStorage.setItem(STORAGE_KEYS.GOLD, JSON.stringify([]));
 }
 
 /**
@@ -159,7 +183,8 @@ export function exportBackupJSON(
   transactions: Transaction[],
   categories: Category[],
   members: FamilyMember[],
-  budget: MonthlyBudget
+  budget: MonthlyBudget,
+  goldTransactions: GoldTransaction[] = []
 ) {
   const data = {
     exportedAt: new Date().toISOString(),
@@ -167,6 +192,7 @@ export function exportBackupJSON(
     categories,
     members,
     budget,
+    goldTransactions,
   };
   const jsonStr = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -179,3 +205,4 @@ export function exportBackupJSON(
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
